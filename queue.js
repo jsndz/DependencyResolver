@@ -9,12 +9,12 @@ class Queue{
         this.tail++;
     }
     pop(){
-        if(this.data.length ==0 )return undefined;
+        if(this.empty())return undefined;
         delete this.data[this.head];
         this.head++;
     }
     front(){
-        return this.data[head];
+        return this.data[this.head];
     }
     empty(){
         return this.tail === this.head;
