@@ -11,6 +11,12 @@ const addDepBtn = document.getElementById("addDependency");
 const checkDepFtn = document.getElementById("run");
 const depLabel = document.getElementById("dependencyLabel");
 const order = document.getElementById("order");
+
+const from = document.getElementById("from");
+const to = document.getElementById("to");
+const path = document.getElementById("path");
+const checkDis = document.getElementById("checkDis");
+
 taskBtn.onclick = function () {
   const t = taskInput.value.trim();
   if (t === "") return;
@@ -28,19 +34,32 @@ checkDepFtn.onclick = function () {
     const li = document.createElement("li");
     li.innerText = task;
     order.appendChild(li);
-    
   });
 };
+
+checkDis.onclick = function () {
+  const p = CheckDistance();
+  p.forEach((task, index) => {
+    const li = document.createElement("li");
+    li.innerText = task;
+    path.appendChild(li);
+  });
+}
 
 function updateDropdowns() {
   taskASelect.innerHTML = "";
   taskBSelect.innerHTML = "";
-
+  from.innerHTML = "";
+  to.innerHTML = "";
   tasks.forEach((task) => {
     const optA = new Option(task.task, task.id);
     const optB = new Option(task.task, task.id);
     taskASelect.add(optA);
     taskBSelect.add(optB);
+    const fromOpt = new Option(task.task, task.id);
+    const toOpt = new Option(task.task, task.id);
+    from.add(fromOpt);
+    to.add(toOpt);
   });
 }
 
@@ -128,6 +147,7 @@ function toposort(al) {
   }
   return ans;
 }
+
 function DependencyResolver(dependencies, tasks) {
   const idToIndex = new Map();
 
@@ -137,6 +157,23 @@ function DependencyResolver(dependencies, tasks) {
   return order.map((o) => {
     return tasks[o].task;
   });
+}
+
+function CheckDistance() {
+  const a = from.value;
+  const b = to.value;
+  const idToIndex = new Map();
+  tasks.forEach((t, i) => {
+    idToIndex.set(t.id, i);
+  });
+  const srcIndex = idToIndex.get(a);
+  const destIndex = idToIndex.get(b);
+  const al = BuildAL(dependencies, tasks, idToIndex);
+  const path = BFS(al, srcIndex, destIndex);
+  console.log(path);
+  return path.map((p,i)=>{
+    return tasks[p].task;
+  })
 }
 
 class Queue {
@@ -160,4 +197,40 @@ class Queue {
   empty() {
     return this.tail === this.head;
   }
+}
+
+function BFS(al, src, dest) {
+  let vis = Array(al.length).fill(0);
+  let q = new Queue();
+  let parent  = Array(al.length).fill(-1);
+  q.push({ node: src, dis: 1 });
+  vis[src]=1;
+  while (!q.empty()) {
+    let obj = q.front();
+    q.pop();
+    if (obj.node == dest) {
+      break;
+    }
+
+    
+    for (let neighbour of al[obj.node]) {
+      if (vis[neighbour] == 0) {
+        vis[neighbour] = 1;
+        parent[neighbour] = obj.node;
+        q.push({ node: neighbour, dis: obj.dis +1 });
+      }
+    }
+  }
+
+  if(vis[dest]==0) return [];
+
+  const path =[];
+  let index = dest;
+ 
+  while(index !=-1){
+    path.push(index)
+    index = parent[index]
+    
+  }
+  return path.reverse();
 }
