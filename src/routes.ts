@@ -26,7 +26,6 @@ router.delete("/task/:id", (req, res) => {
       dependencies.splice(i, 1);
     }
   }
-
   res.json({ ok: true });
 });
 

@@ -1,4 +1,5 @@
 import type { Dependency, Task } from "./store";
+import { Queue } from "./structures/queue";
 
 function buildAL(
   dependencies: Dependency[],
@@ -26,12 +27,14 @@ export function resolveDependencies(
 
   for (const n of al) for (const v of n) indeg[v]++;
 
-  const q: number[] = [];
+  const q:Queue =  new Queue();
   indeg.forEach((d, i) => d === 0 && q.push(i));
 
   const res: string[] = [];
-  while (q.length) {
-    const u = q.shift()!;
+  while (!q.empty()) {
+    const u = q.front();
+    if (u === undefined) break;
+    q.pop();
     res.push(tasks[u]!.task);
     for (const v of al[u]!) {
       if (--indeg[v] === 0) q.push(v);
@@ -54,13 +57,15 @@ export function shortestPath(
   const dst = idToIndex.get(to)!;
   const al = buildAL(dependencies, tasks, idToIndex);
 
-  const q: number[] = [src];
+  const q: Queue= new Queue();
+  q.push(src);
   const parent = Array(al.length).fill(-1);
   const vis = Array(al.length).fill(false);
   vis[src] = true;
 
-  while (q.length) {
-    const u = q.shift()!;
+  while (!q.empty()) {
+    const u = q.front()!;
+    q.pop();
     if (u === dst) break;
     for (const v of al[u]!) {
       if (!vis[v]) {
