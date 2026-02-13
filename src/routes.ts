@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { tasks, dependencies } from "./store.js";
-import { resolveDependencies, shortestPath } from "./graph.js";
+import { detectCycle, resolveDependencies, shortestPath } from "./graph.js";
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.post("/task", (req, res) => {
   tasks.push(t);
   res.json(t);
 });
-
+ 
 router.delete("/task/:id", (req, res) => {
   const id = req.params.id;
 
@@ -49,5 +49,9 @@ router.get("/path", (req, res) => {
 
   res.json(shortestPath(dependencies, tasks, from, to));
 });
+
+router.get("/cycle",(req,res)=>{
+    res.json(detectCycle(dependencies,tasks));
+})
 
 export default router;

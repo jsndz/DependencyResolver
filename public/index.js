@@ -14,6 +14,8 @@ const toSelect = document.getElementById("to");
 const pathList = document.getElementById("path");
 const checkDisBtn = document.getElementById("checkDis");
 
+const cycle = document.getElementById("cycle");
+
 async function api(url, options = {}) {
   const res = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -83,17 +85,28 @@ addDepBtn.onclick = async () => {
   });
 
   depLabel.textContent = "Dependency added ✔";
-};
+};  
 
 checkDepBtn.onclick = async () => {
   orderList.innerHTML = "";
-  const order = await api("/api/order");
-
-  order.forEach((t) => {
-    const li = document.createElement("li");
-    li.textContent = t;
-    orderList.appendChild(li);
-  });
+  const res = await api("/api/order");
+  console.log(res);
+  
+  if (res.ok) {
+    res.order.forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t; 
+      orderList.appendChild(li);
+    });
+  } else {
+    cycle.innerText = "Cycle Detected"
+    res.cycle.forEach((t) => {
+      const li = document.createElement("li");
+      li.textContent = t;
+      orderList.appendChild(li);
+    });
+    
+  }
 };
 
 checkDisBtn.onclick = async () => {
@@ -111,5 +124,5 @@ checkDisBtn.onclick = async () => {
   });
 };
 
-
 reload();
+
