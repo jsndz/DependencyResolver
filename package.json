@@ -1,20 +1,16 @@
 {
   "name": "dependencyresolver",
-  "version": "1.0.0",
-  "description": "Dependency Resolver",
-  "homepage": "https://github.com/jsndz/DependencyResolver#readme",
-  "bugs": {
-    "url": "https://github.com/jsndz/DependencyResolver/issues"
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jsndz/DependencyResolver.git"
+  "peerDependencies": {
+    "typescript": "^5"
   },
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }

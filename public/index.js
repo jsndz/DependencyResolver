@@ -1,6 +1,3 @@
-const tasks = [];
-const dependencies = [];
-
 const taskBtn = document.getElementById("addTask");
 const taskInput = document.getElementById("task");
 const taskList = document.getElementById("taskList");
@@ -8,229 +5,111 @@ const taskList = document.getElementById("taskList");
 const taskASelect = document.getElementById("taskA");
 const taskBSelect = document.getElementById("taskB");
 const addDepBtn = document.getElementById("addDependency");
-const checkDepFtn = document.getElementById("run");
+const checkDepBtn = document.getElementById("run");
 const depLabel = document.getElementById("dependencyLabel");
-const order = document.getElementById("order");
+const orderList = document.getElementById("order");
 
-const from = document.getElementById("from");
-const to = document.getElementById("to");
-const path = document.getElementById("path");
-const checkDis = document.getElementById("checkDis");
+const fromSelect = document.getElementById("from");
+const toSelect = document.getElementById("to");
+const pathList = document.getElementById("path");
+const checkDisBtn = document.getElementById("checkDis");
 
-taskBtn.onclick = function () {
-  const t = taskInput.value.trim();
-  if (t === "") return;
-
-  tasks.push({ task: t, id: crypto.randomUUID() });
-  taskInput.value = "";
-  renderTasks();
-  updateDropdowns();
-};
-
-checkDepFtn.onclick = function () {
-  const dep = DependencyResolver(dependencies, tasks);
-  console.log(dep);
-  dep.forEach((task, index) => {
-    const li = document.createElement("li");
-    li.innerText = task;
-    order.appendChild(li);
+async function api(url, options = {}) {
+  const res = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
   });
-};
-
-checkDis.onclick = function () {
-  const p = CheckDistance();
-  p.forEach((task, index) => {
-    const li = document.createElement("li");
-    li.innerText = task;
-    path.appendChild(li);
-  });
+  return res.json();
 }
 
-function updateDropdowns() {
-  taskASelect.innerHTML = "";
-  taskBSelect.innerHTML = "";
-  from.innerHTML = "";
-  to.innerHTML = "";
-  tasks.forEach((task) => {
-    const optA = new Option(task.task, task.id);
-    const optB = new Option(task.task, task.id);
-    taskASelect.add(optA);
-    taskBSelect.add(optB);
-    const fromOpt = new Option(task.task, task.id);
-    const toOpt = new Option(task.task, task.id);
-    from.add(fromOpt);
-    to.add(toOpt);
-  });
+async function reload() {
+  const tasks = await api("/api/tasks");
+  renderTasks(tasks);
+  updateDropdowns(tasks);
 }
 
-addDepBtn.onclick = function () {
-  const a = taskASelect.value;
-  const b = taskBSelect.value;
-
-  if (a === b) return;
-
-  dependencies.push({ from: a, to: b });
-
-  depLabel.textContent = `Task "${tasks.find((t) => t.id === b).task}"
-         depends on
-         "${tasks.find((t) => t.id === a).task}"`;
-};
-function renderTasks() {
+function renderTasks(tasks) {
   taskList.innerHTML = "";
 
-  tasks.forEach((task, index) => {
+  tasks.forEach((t) => {
     const li = document.createElement("li");
-    li.textContent = task.task;
+    li.textContent = t.task;
 
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "x";
-    removeBtn.onclick = function () {
-      const removedId = task.id;
-
-      tasks.splice(index, 1);
-
-      for (let i = dependencies.length - 1; i >= 0; i--) {
-        if (
-          dependencies[i].from === removedId ||
-          dependencies[i].to === removedId
-        ) {
-          dependencies.splice(i, 1);
-        }
-      }
-
-      renderTasks();
-      updateDropdowns();
+    const btn = document.createElement("button");
+    btn.textContent = "x";
+    btn.onclick = async () => {
+      await fetch(`/api/task/${t.id}`, { method: "DELETE" });
+      reload();
     };
-    li.appendChild(removeBtn);
+
+    li.appendChild(btn);
     taskList.appendChild(li);
   });
 }
 
-function BuildAL(dependencies, tasks, idToIndex) {
-  const al = Array.from({ length: tasks.length }, () => []);
+function updateDropdowns(tasks) {
+  [taskASelect, taskBSelect, fromSelect, toSelect].forEach(
+    (el) => (el.innerHTML = "")
+  );
 
-  dependencies.forEach((dep) => {
-    const a = idToIndex.get(dep.from);
-    const b = idToIndex.get(dep.to);
-    al[a].push(b);
-  });
-
-  return al;
-}
-function toposort(al) {
-  const q = new Queue();
-  const ans = [];
-  const indegree = Array(al.length).fill(0);
-  let count = 0;
-  for (const neighbours of al) {
-    for (const neighbour of neighbours) {
-      indegree[neighbour]++;
-    }
-  }
-  for (let i = 0; i < indegree.length; i++) {
-    if (indegree[i] === 0) q.push(i);
-  }
-  while (!q.empty()) {
-    let node = q.front();
-    q.pop();
-    ans.push(node);
-    count++;
-    for (let neighbour of al[node]) {
-      indegree[neighbour]--;
-      if (indegree[neighbour] == 0) {
-        q.push(neighbour);
-      }
-    }
-  }
-  if (count != al.length) {
-    return [];
-  }
-  return ans;
-}
-
-function DependencyResolver(dependencies, tasks) {
-  const idToIndex = new Map();
-
-  tasks.forEach((t, i) => idToIndex.set(t.id, i));
-  const al = BuildAL(dependencies, tasks, idToIndex);
-  const order = toposort(al);
-  return order.map((o) => {
-    return tasks[o].task;
+  tasks.forEach((t) => {
+    taskASelect.add(new Option(t.task, t.id));
+    taskBSelect.add(new Option(t.task, t.id));
+    fromSelect.add(new Option(t.task, t.id));
+    toSelect.add(new Option(t.task, t.id));
   });
 }
 
-function CheckDistance() {
-  const a = from.value;
-  const b = to.value;
-  const idToIndex = new Map();
-  tasks.forEach((t, i) => {
-    idToIndex.set(t.id, i);
+taskBtn.onclick = async () => {
+  const task = taskInput.value.trim();
+  if (!task) return;
+
+  await api("/api/task", {
+    method: "POST",
+    body: JSON.stringify({ task }),
   });
-  const srcIndex = idToIndex.get(a);
-  const destIndex = idToIndex.get(b);
-  const al = BuildAL(dependencies, tasks, idToIndex);
-  const path = BFS(al, srcIndex, destIndex);
-  console.log(path);
-  return path.map((p,i)=>{
-    return tasks[p].task;
-  })
-}
 
-class Queue {
-  constructor() {
-    this.data = [];
-    this.head = 0;
-    this.tail = 0;
-  }
-  push(task) {
-    this.data[this.tail] = task;
-    this.tail++;
-  }
-  pop() {
-    if (this.empty()) return undefined;
-    delete this.data[this.head];
-    this.head++;
-  }
-  front() {
-    return this.data[this.head];
-  }
-  empty() {
-    return this.tail === this.head;
-  }
-}
+  taskInput.value = "";
+  reload();
+};
+addDepBtn.onclick = async () => {
+  const from = taskASelect.value;
+  const to = taskBSelect.value;
+  if (from === to) return;
 
-function BFS(al, src, dest) {
-  let vis = Array(al.length).fill(0);
-  let q = new Queue();
-  let parent  = Array(al.length).fill(-1);
-  q.push({ node: src, dis: 1 });
-  vis[src]=1;
-  while (!q.empty()) {
-    let obj = q.front();
-    q.pop();
-    if (obj.node == dest) {
-      break;
-    }
+  await api("/api/dependency", {
+    method: "POST",
+    body: JSON.stringify({ from, to }),
+  });
 
-    
-    for (let neighbour of al[obj.node]) {
-      if (vis[neighbour] == 0) {
-        vis[neighbour] = 1;
-        parent[neighbour] = obj.node;
-        q.push({ node: neighbour, dis: obj.dis +1 });
-      }
-    }
-  }
+  depLabel.textContent = "Dependency added ✔";
+};
 
-  if(vis[dest]==0) return [];
+checkDepBtn.onclick = async () => {
+  orderList.innerHTML = "";
+  const order = await api("/api/order");
 
-  const path =[];
-  let index = dest;
- 
-  while(index !=-1){
-    path.push(index)
-    index = parent[index]
-    
-  }
-  return path.reverse();
-}
+  order.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    orderList.appendChild(li);
+  });
+};
+
+checkDisBtn.onclick = async () => {
+  pathList.innerHTML = "";
+
+  const from = fromSelect.value;
+  const to = toSelect.value;
+
+  const path = await api(`/api/path?from=${from}&to=${to}`);
+
+  path.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    pathList.appendChild(li);
+  });
+};
+
+
+reload();
