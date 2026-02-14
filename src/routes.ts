@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { tasks, dependencies } from "./store.js";
-import { detectCycle, parallelExecution, resolveDependencies, shortestPath } from "./graph.js";
+import { detectCycle, parallelExecution, resolveDependencies, shortestPath, terminalNodes, unreachableNodes } from "./graph.js";
 
 const router = Router();
 
@@ -57,5 +57,15 @@ router.get("/cycle",(req,res)=>{
 router.get("/parallel",(req,res)=>{
   res.json(parallelExecution(dependencies,tasks));
 })
+
+router.get("/terminal", (req, res) => {
+  const indices = terminalNodes(dependencies, tasks);
+  res.json(indices.map(i => tasks[i]!.task));
+});
+
+router.get("/unreachable", (req, res) => {
+  const indices = unreachableNodes(dependencies, tasks);
+  res.json(indices.map(i => tasks[i]!.task));
+});
 
 export default router;

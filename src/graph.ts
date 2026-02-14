@@ -144,9 +144,7 @@ export function detectCycle(dependencies: Dependency[], tasks: Task[]) {
 
 export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
   const idToIndex = new Map<string, number>();
-  tasks.forEach((task, index) => 
-    idToIndex.set(task.id, index)
-  );
+  tasks.forEach((task, index) => idToIndex.set(task.id, index));
   const al = buildAL(dependencies, tasks, idToIndex);
 
   const indegree = Array(al.length).fill(0);
@@ -190,4 +188,75 @@ export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
   }
 
   return { ok: true, levels };
+}
+
+// we want
+
+// unreachable tasks
+
+// terminal task - last tasks
+
+// redundant dependency
+export function terminalNodes(
+  dependencies: Dependency[],
+  tasks: Task[]
+): number[] {
+  const idToIndex = new Map<string, number>();
+  tasks.forEach((t, i) => idToIndex.set(t.id, i));
+
+  const al = buildAL(dependencies, tasks, idToIndex);
+
+  const terminals: number[] = [];
+  al.forEach((edges, i) => {
+    if (edges.length === 0) {
+      terminals.push(i);
+    }
+  });
+
+  return terminals;
+}
+
+export function unreachableNodes(
+  dependencies: Dependency[],
+  tasks: Task[]
+): number[] {
+  const idToIndex = new Map<string, number>();
+  tasks.forEach((t, i) => idToIndex.set(t.id, i));
+
+  const al = buildAL(dependencies, tasks, idToIndex);
+
+  const indegree = Array(al.length).fill(0);
+  for (const node of al) {
+    for (const neighbour of node) {
+      indegree[neighbour]++;
+    }
+  }
+
+  const q = new Queue();
+  const vis = Array(al.length).fill(0);
+
+  // start BFS from all sources
+  indegree.forEach((d, i) => {
+    if (d === 0) q.push(i);
+  });
+
+  while (!q.empty()) {
+    const node = q.front();
+    q.pop();
+    if (node === undefined) break;
+
+    vis[node] = 1;
+    for (const neighbour of al[node]!) {
+      if (vis[neighbour] === 0) {
+        q.push(neighbour);
+      }
+    }
+  }
+
+  const unreachable: number[] = [];
+  vis.forEach((v, i) => {
+    if (v === 0) unreachable.push(i);
+  });
+
+  return unreachable;
 }

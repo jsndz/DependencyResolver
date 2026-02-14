@@ -15,8 +15,17 @@ const pathList = document.getElementById("path");
 const checkDisBtn = document.getElementById("checkDis");
 
 const cycle = document.getElementById("cycle");
+
 const parallels = document.getElementById("parallels");
 const checkParBtn = document.getElementById("checkPar");
+
+
+const unreachable = document.getElementById("unreachable");
+const checkUnreachBtn = document.getElementById("checkUnreach");
+
+
+const terminals = document.getElementById("terminal");
+const checkTerminalBtn = document.getElementById("checkTerminal");
 
 async function api(url, options = {}) {
   const res = await fetch(url, {
@@ -145,4 +154,27 @@ checkParBtn.onclick = async () => {
   }
 };
 
+
+checkUnreachBtn.onclick = async () => {
+  unreachable.innerHTML = "";
+
+  const unreachabl = await api("/api/unreachable");
+
+  unreachabl.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    unreachable.appendChild(li);
+  });
+};
+checkTerminalBtn.onclick = async () => {
+  terminals.innerHTML = "";
+
+  const termina = await api("/api/terminal");
+
+  termina.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    terminals.appendChild(li);
+  });
+};
 reload();
