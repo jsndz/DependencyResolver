@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { tasks, dependencies } from "./store.js";
-import { detectCycle, resolveDependencies, shortestPath } from "./graph.js";
+import { detectCycle, parallelExecution, resolveDependencies, shortestPath } from "./graph.js";
 
 const router = Router();
 
@@ -52,6 +52,10 @@ router.get("/path", (req, res) => {
 
 router.get("/cycle",(req,res)=>{
     res.json(detectCycle(dependencies,tasks));
+})
+
+router.get("/parallel",(req,res)=>{
+  res.json(parallelExecution(dependencies,tasks));
 })
 
 export default router;

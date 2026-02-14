@@ -141,3 +141,53 @@ export function detectCycle(dependencies: Dependency[], tasks: Task[]) {
   }
   return cycle;
 }
+
+export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
+  const idToIndex = new Map<string, number>();
+  tasks.forEach((task, index) => 
+    idToIndex.set(task.id, index)
+  );
+  const al = buildAL(dependencies, tasks, idToIndex);
+
+  const indegree = Array(al.length).fill(0);
+  for (const node of al) {
+    for (const neighbour of node) {
+      indegree[neighbour]++;
+    }
+  }
+  const q = new Queue();
+  indegree.forEach((node, index) => {
+    if (node == 0) {
+      q.push(index);
+    }
+  });
+  let count: number = 0;
+  const levels: string[][] = [];
+  while (!q.empty()) {
+    const level: string[] = [];
+    const size = q.tail - q.head;
+
+    for (let i = 0; i < size; i++) {
+      const node = q.front();
+      q.pop();
+      if (node === undefined) break;
+
+      count++;
+      level.push(tasks[node]!.task);
+
+      for (const neighbour of al[node]!) {
+        indegree[neighbour]--;
+        if (indegree[neighbour] === 0) {
+          q.push(neighbour);
+        }
+      }
+    }
+
+    levels.push(level);
+  }
+  if (count !== tasks.length) {
+    return { ok: false };
+  }
+
+  return { ok: true, levels };
+}
