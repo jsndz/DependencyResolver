@@ -1,5 +1,5 @@
-import type { Dependency, Task } from "./store";
-import { Queue } from "./structures/queue";
+import type { Dependency, Task } from "../store/index.js";
+import { Queue } from "../lib/queue.js";
 
 function buildAL(
   dependencies: Dependency[],
@@ -41,8 +41,6 @@ export function resolveDependencies(dependencies: Dependency[], tasks: Task[]) {
     return { ok: true, order };
   }
   const cycleIdx = detectCycle(dependencies, tasks);
-  console.log(cycleIdx);
-
   const cycle = cycleIdx.map((i) => tasks[i]!.task);
 
   return { ok: false, cycle };
@@ -120,14 +118,11 @@ export function DFS(
 }
 
 export function detectCycle(dependencies: Dependency[], tasks: Task[]) {
-  // visited + recursion
-
   const n = tasks.length;
   const parent = Array(n).fill(-1);
   const visited = Array(n).fill(0);
 
   const cycle: number[] = [];
-  // 0 1 2
   const idToIndex = new Map<string, number>();
 
   tasks.forEach((t, i) => idToIndex.set(t.id, i));
@@ -160,9 +155,9 @@ export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
     }
   });
   let count: number = 0;
-  const levels: string[][] = [];
+  const levels: Task[][] = [];
   while (!q.empty()) {
-    const level: string[] = [];
+    const level: Task[] = [];
     const size = q.tail - q.head;
 
     for (let i = 0; i < size; i++) {
@@ -171,7 +166,7 @@ export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
       if (node === undefined) break;
 
       count++;
-      level.push(tasks[node]!.task);
+      level.push(tasks[node]!);
 
       for (const neighbour of al[node]!) {
         indegree[neighbour]--;
@@ -190,13 +185,6 @@ export function parallelExecution(dependencies: Dependency[], tasks: Task[]) {
   return { ok: true, levels };
 }
 
-// we want
-
-// unreachable tasks
-
-// terminal task - last tasks
-
-// redundant dependency
 export function terminalNodes(
   dependencies: Dependency[],
   tasks: Task[]
@@ -235,7 +223,6 @@ export function unreachableNodes(
   const q = new Queue();
   const vis = Array(al.length).fill(0);
 
-  // start BFS from all sources
   indegree.forEach((d, i) => {
     if (d === 0) q.push(i);
   });

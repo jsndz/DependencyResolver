@@ -1,7 +1,15 @@
 import { Router } from "express";
 import crypto from "crypto";
-import { tasks, dependencies } from "./store.js";
-import { detectCycle, parallelExecution, resolveDependencies, shortestPath, terminalNodes, unreachableNodes } from "./graph.js";
+import { tasks, dependencies, type Task } from "../store/index.js";
+import {
+  detectCycle,
+  parallelExecution,
+  resolveDependencies,
+  shortestPath,
+  terminalNodes,
+  unreachableNodes,
+} from "../services/graph.js";
+import { execute } from "../services/execution.js";
 
 const router = Router();
 
@@ -10,13 +18,17 @@ router.get("/tasks", (_, res) => {
 });
 
 router.post("/task", (req, res) => {
-  const t = { task: req.body.task, id: crypto.randomUUID() };
-  console.log(t);
-  
+  const t: Task = {
+    task: req.body.task,
+    id: crypto.randomUUID(),
+    folder: req.body.folder,
+    command: req.body.command,
+    dependency:[]
+  };
   tasks.push(t);
   res.json(t);
 });
- 
+
 router.delete("/task/:id", (req, res) => {
   const id = req.params.id;
 
@@ -28,13 +40,19 @@ router.delete("/task/:id", (req, res) => {
       dependencies.splice(i, 1);
     }
   }
+
   res.json({ ok: true });
 });
 
 router.post("/dependency", (req, res) => {
   dependencies.push(req.body);
-  res.json({ ok: true });
+  console.log(req.body);
+  const t= tasks.find((t)=>t.id === req.body.to)
+  t?.dependency.push(req.body.from);
 
+  console.log(t);
+  
+  res.json({ ok: true });
 });
 
 router.get("/order", (_, res) => {
@@ -52,22 +70,27 @@ router.get("/path", (req, res) => {
   res.json(shortestPath(dependencies, tasks, from, to));
 });
 
-router.get("/cycle",(req,res)=>{
-    res.json(detectCycle(dependencies,tasks));
-})
+router.get("/cycle", (req, res) => {
+  res.json(detectCycle(dependencies, tasks));
+});
 
-router.get("/parallel",(req,res)=>{
-  res.json(parallelExecution(dependencies,tasks));
-})
+router.get("/parallel", (req, res) => {
+  res.json(parallelExecution(dependencies, tasks));
+});
 
 router.get("/terminal", (req, res) => {
   const indices = terminalNodes(dependencies, tasks);
-  res.json(indices.map(i => tasks[i]!.task));
+  res.json(indices.map((i) => tasks[i]!.task));
 });
 
 router.get("/unreachable", (req, res) => {
   const indices = unreachableNodes(dependencies, tasks);
-  res.json(indices.map(i => tasks[i]!.task));
+  res.json(indices.map((i) => tasks[i]!.task));
+});
+
+router.get("/execute", (req, res) => {
+  execute();
+  res.json({ ok: true });
 });
 
 export default router;

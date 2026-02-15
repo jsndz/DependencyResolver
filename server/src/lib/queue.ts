@@ -1,16 +1,14 @@
-import type { Task } from "../store";
-
 export class Queue {
-  data:number[] = [];
-  head:number = 0;
-  tail:number = 0;
+  data: number[] = [];
+  head: number = 0;
+  tail: number = 0;
 
   constructor() {
     this.data = [];
     this.head = 0;
     this.tail = 0;
   }
-  push(task:number) {
+  push(task: number) {
     this.data[this.tail] = task;
     this.tail++;
   }

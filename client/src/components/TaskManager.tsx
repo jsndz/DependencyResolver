@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Trash2, ListTodo, Loader2 } from "lucide-react";
-import { Task } from "../types";
+import { Task, TaskRequest } from "../types";
 import { useAddTask, useDeleteTask } from "../hooks/useTasks";
 
 export default function TaskManager({
@@ -11,13 +11,19 @@ export default function TaskManager({
   loading: boolean;
 }) {
   const [taskName, setTaskName] = useState("");
+  const [taskFolder, setTaskFolder] = useState("");
+  const [taskCommand, setTaskCommand] = useState("");
   const addTask = useAddTask();
   const deleteTask = useDeleteTask();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskName.trim()) return;
-    addTask.mutate(taskName.trim());
+    const task: TaskRequest ={task : taskName,
+      command:taskCommand,
+      folder:taskFolder
+    }
+    addTask.mutate(task);
     setTaskName("");
   };
 
@@ -29,14 +35,18 @@ export default function TaskManager({
             <ListTodo size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Task Management</h2>
-            <p className="text-xs text-slate-500">Add and remove workflow tasks</p>
+            <h2 className="text-lg font-semibold text-slate-800">
+              Task Management
+            </h2>
+            <p className="text-xs text-slate-500">
+              Add and remove workflow tasks
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        <form onSubmit={handleSubmit} className="flex gap-3">
+      <div className="p-6 space-y-6 ">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 ">
           <input
             value={taskName}
             onChange={(e) => setTaskName(e.target.value)}
@@ -44,6 +54,20 @@ export default function TaskManager({
             placeholder="Enter task name"
             disabled={addTask.isPending}
           />
+          <input
+            value={taskFolder}
+            onChange={(e) => setTaskFolder(e.target.value)}
+            className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
+            placeholder="Enter task folder"
+            disabled={addTask.isPending}
+          />
+          <input
+            value={taskCommand}
+            onChange={(e) => setTaskCommand(e.target.value)}
+            className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow"
+            placeholder="Enter task command"
+            disabled={addTask.isPending}
+          />{" "}
           <button
             type="submit"
             disabled={!taskName.trim() || addTask.isPending}
@@ -59,7 +83,9 @@ export default function TaskManager({
         </form>
 
         <div>
-          <h3 className="text-sm font-medium text-slate-600 mb-3">Tasks ({tasks.length})</h3>
+          <h3 className="text-sm font-medium text-slate-600 mb-3">
+            Tasks ({tasks.length})
+          </h3>
           {loading ? (
             <div className="flex items-center justify-center py-12 text-slate-400">
               <Loader2 size={24} className="animate-spin" />
@@ -68,7 +94,9 @@ export default function TaskManager({
             <div className="text-center py-10 px-4 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50">
               <ListTodo size={32} className="mx-auto text-slate-300 mb-2" />
               <p className="text-sm text-slate-500">No tasks yet</p>
-              <p className="text-xs text-slate-400 mt-0.5">Add a task above to get started</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Add a task above to get started
+              </p>
             </div>
           ) : (
             <ul className="space-y-2">
@@ -77,7 +105,9 @@ export default function TaskManager({
                   key={t.id}
                   className="flex justify-between items-center gap-3 px-4 py-3 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100/80 transition-colors group"
                 >
-                  <span className="text-sm font-medium text-slate-800 truncate">{t.task}</span>
+                  <span className="text-sm font-medium text-slate-800 truncate">
+                    {t.task}
+                  </span>
                   <button
                     type="button"
                     onClick={() => deleteTask.mutate(t.id)}

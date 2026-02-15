@@ -1,16 +1,18 @@
 import { api } from "../config/api";
-import { Task, Dependency } from "../types";
+import { Task, Dependency, TaskRequest } from "../types";
 
 export const fetchTasks = async (): Promise<{
   tasks: Task[];
   dependencies: Dependency[];
 }> => {
   const { data } = await api.get("/tasks");
+  console.log(data);
+  
   return data;
 };
 
-export const addTask = (task: string) =>
-  api.post("/task", { task });
+export const addTask = (task: TaskRequest) =>
+  api.post("/task", task);
 
 export const deleteTask = (id: string) =>
   api.delete(`/task/${id}`);
@@ -29,3 +31,11 @@ export const analyze = async (
 
   return data;
 };
+
+
+export const execute  =async () =>{
+  const { data } = await api.get("/execute");
+  console.log(data);
+  
+  return data;
+}

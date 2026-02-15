@@ -1,7 +1,17 @@
 export interface Task {
   id: string;
   task: string;
+  folder: string;
+  command: string;
 }
+
+export interface TaskRequest {
+  task: string;
+  folder: string;
+  command: string;
+}
+
+
 
 export interface Dependency {
   from: string;
