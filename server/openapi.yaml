@@ -1,0 +1,304 @@
+openapi: 3.0.3
+info:
+  title: Task Dependency Graph API
+  description: >
+    An API for managing tasks and their dependencies using a directed graph.
+    It supports dependency resolution, cycle detection, shortest paths,
+    parallel execution levels, terminal tasks, and unreachable tasks.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /tasks:
+    get:
+      summary: Get all tasks
+      description: >
+        Returns the full list of tasks currently stored in memory.
+        Each task has a unique ID and a human-readable task name.
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /task:
+    post:
+      summary: Create a new task
+      description: >
+        Creates a new task with a randomly generated UUID.
+        The task is added to the task list with no dependencies by default.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:
+                  type: string
+                  example: Build backend
+      responses:
+        "200":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /task/{id}:
+    delete:
+      summary: Delete a task
+      description: >
+        Deletes a task by ID.
+        Any dependencies that reference this task (as source or destination)
+        are also removed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Task ID to delete
+      responses:
+        "200":
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /dependency:
+    post:
+      summary: Create a dependency
+      description: >
+        Adds a directed dependency between two tasks.
+        The dependency means `from` must be completed before `to`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Dependency"
+      responses:
+        "200":
+          description: Dependency added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /order:
+    get:
+      summary: Resolve task execution order
+      description: >
+        Performs a topological sort of the task graph.
+        If no cycle exists, returns a valid execution order.
+        If a cycle exists, returns the tasks involved in the cycle.
+      responses:
+        "200":
+          description: Dependency resolution result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      order:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - Setup DB
+                          - Build backend
+                          - Build frontend
+                  - type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: false
+                      cycle:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - Task A
+                          - Task B
+                          - Task A
+
+  /path:
+    get:
+      summary: Find shortest dependency path
+      description: >
+        Finds the shortest path (in number of edges) from one task to another
+        using BFS. Returns an empty array if no path exists.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Source task ID
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Destination task ID
+      responses:
+        "200":
+          description: Shortest path between tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - Setup DB
+                - Build backend
+                - Deploy
+
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid from or to
+
+  /cycle:
+    get:
+      summary: Detect cycle in task graph
+      description: >
+        Detects a cycle in the dependency graph using DFS.
+        Returns the indices of tasks involved in the first detected cycle.
+        Returns an empty array if no cycle exists.
+      responses:
+        "200":
+          description: Cycle detection result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+              example: [0, 2, 3, 0]
+
+  /parallel:
+    get:
+      summary: Get parallel execution levels
+      description: >
+        Groups tasks into execution levels where tasks in the same level
+        can be executed in parallel. Uses Kahn’s algorithm (BFS).
+        Returns `ok: false` if a cycle prevents scheduling.
+      responses:
+        "200":
+          description: Parallel execution plan
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      levels:
+                        type: array
+                        items:
+                          type: array
+                          items:
+                            type: string
+                        example:
+                          - [Setup DB, Setup Cache]
+                          - [Build backend]
+                          - [Deploy]
+                  - type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: false
+
+  /terminal:
+    get:
+      summary: Get terminal tasks
+      description: >
+        Returns tasks that have no outgoing dependencies.
+        These are the final tasks in the workflow.
+      responses:
+        "200":
+          description: Terminal tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - Deploy
+                - Notify users
+
+  /unreachable:
+    get:
+      summary: Get unreachable tasks
+      description: >
+        Returns tasks that cannot be reached from any source task
+        (tasks with zero indegree). Indicates disconnected or orphaned tasks.
+      responses:
+        "200":
+          description: Unreachable tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - Old cleanup task
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 550e8400-e29b-41d4-a716-446655440000
+        task:
+          type: string
+          example: Build backend
+
+    Dependency:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          description: Task ID that must be completed first
+          example: 550e8400-e29b-41d4-a716-446655440000
+        to:
+          type: string
+          description: Task ID that depends on the `from` task
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7

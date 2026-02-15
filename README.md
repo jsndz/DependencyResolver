@@ -1,67 +1,95 @@
-Dependency Resolver
+# Workflow Dependency Engine
 
-You are given a list of tasks and their dependencies.
-Each task can run only after all its dependencies are completed.
+A web app to define tasks and their dependencies, then run graph-based analyses (topological order, cycle detection, path finding, and more).
 
-Your system should:
+## Features
 
-Validate whether the dependencies are valid (no circular dependency)
+- **Task management** — Add and delete tasks. Each task has a name and a unique ID.
+- **Dependencies** — Define directed edges between tasks (from → to). Dependencies are stored and listed in the UI.
+- **Resolve order** — Get a valid topological order for your task graph (or detect if none exists due to a cycle).
+- **Detect cycle** — Check whether the dependency graph contains a cycle.
+- **Parallel plan** — See tasks grouped by execution level (what can run in parallel at each step).
+- **Terminal tasks** — List leaf nodes (tasks with no outgoing dependencies).
+- **Unreachable tasks** — List tasks that are not reachable from any other task in the graph.
+- **Find path** — Compute a shortest path between two chosen tasks.
 
-If valid, return a correct execution order of tasks
+Results are shown in a dedicated panel; array results (e.g. order, path) are displayed as a list, and other payloads as formatted JSON.
 
-If invalid, clearly report a circular dependency error
+## Tech stack
 
----
+| Layer   | Stack |
+|--------|--------|
+| **Client** | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, Zustand, Axios, Lucide React |
+| **Server** | Express 5, TypeScript, Bun (runtime) |
 
-# Dependency & Workflow Engine — NEXT TODOs
+The backend keeps tasks and dependencies in memory (no database). CORS is set for `http://localhost:5173`.
 
-## 1 Cycle Diagnostics
+## Project structure
 
-- Detect cycle
-- Extract exact cycle path
-- Show tasks involved in the cycle
+```
+dependencyresolver/
+├── client/          # Vite + React frontend
+│   └── src/
+│       ├── api/     # API client (tasks, analysis)
+│       ├── components/
+│       ├── config/  # API base URL
+│       ├── hooks/   # useTasks, useAnalysis
+│       └── store/   # Zustand (analysis result, error)
+├── server/          # Express API
+│   └── src/
+│       ├── routes.ts   # REST endpoints
+│       ├── store.ts    # in-memory tasks & dependencies
+│       └── graph.ts    # order, cycle, path, parallel, terminal, unreachable
+└── README.md
+```
 
----
+## Getting started
 
-## 2 Strongly Connected Components (SCC)
+### Prerequisites
 
-- Identify SCCs using Kosaraju
-- Group mutually dependent tasks
-- Build DAG of SCCs
-- Output execution order of SCC groups
+- [Bun](https://bun.sh/) (for the server)
+- Node.js 18+ (for the client; or use Bun for `client` as well)
 
----
+### Run the app
 
-## 3 Critical Path Analysis
+1. **Start the API server** (port 3000):
 
-- Assign execution time to each task
-- Compute longest path in DAG
-- Output critical path
-- Output total workflow time
+   ```bash
+   cd server
+   bun install
+   bun run .
+   ```
 
----
+2. **Start the frontend** (port 5173):
 
-## 4 Parallel Execution Levels
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
 
-- Identify tasks runnable in parallel
-- Group tasks by execution level
-- Output step-wise execution plan
+3. Open **http://localhost:5173** in your browser.
 
----
+### Build for production
 
-## 5 Unreachable / Redundant Tasks
+- **Client:** `cd client && npm run build` — output in `client/dist`.
+- **Server:** Ensure the client build is served (e.g. via `express.static` or a reverse proxy). The repo already uses `express.static` for a `public` folder; you can point it at `client/dist` after building.
 
-- Detect tasks never executed
-- Detect redundant dependencies
-- Report unused tasks
+## API overview
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/tasks` | Get all tasks and dependencies |
+| POST | `/api/task` | Add a task (`body: { task: string }`) |
+| DELETE | `/api/task/:id` | Delete a task and its dependencies |
+| POST | `/api/dependency` | Add a dependency (`body: { from, to }` task IDs) |
+| GET | `/api/order` | Topological order (or cycle info) |
+| GET | `/api/cycle` | Cycle detection result |
+| GET | `/api/parallel` | Parallel execution levels |
+| GET | `/api/terminal` | Terminal (leaf) tasks |
+| GET | `/api/unreachable` | Unreachable tasks |
+| GET | `/api/path?from=&to=` | Shortest path between two tasks |
 
+## License
 
-## 6 Undirected Dependency Analysis (Optional)
-
-- Treat dependencies as undirected
-- Find connected components
-- Detect redundant connections using DSU
-
----
+Private / unlicensed unless stated otherwise.

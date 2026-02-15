@@ -6,11 +6,13 @@ import { detectCycle, parallelExecution, resolveDependencies, shortestPath, term
 const router = Router();
 
 router.get("/tasks", (_, res) => {
-  res.json(tasks);
+  res.json({ tasks, dependencies });
 });
 
 router.post("/task", (req, res) => {
   const t = { task: req.body.task, id: crypto.randomUUID() };
+  console.log(t);
+  
   tasks.push(t);
   res.json(t);
 });
