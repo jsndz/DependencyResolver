@@ -1,22 +1,23 @@
-
+import Terminal from "../components/Terminal";
+import { useTerminals } from "../hooks/useTerminals";
 
 const ExecutionPage = () => {
-  const handleSubmit=async ()=>{
-    console.log("sub");
-    const eventSource = new EventSource("http://localhost:3000/api/execute");
+  const terminals = useTerminals();
 
-    eventSource.onmessage = (event) => {
-      console.log("New data:", event.data);
-    };
-  
-    eventSource.onerror = (err) => {
-      console.error("SSE error:", err);
-    };
-       
-  }
   return (
-    <button onClick={handleSubmit}>Run</button>
-  )
-}
+    <div className="min-h-screen bg-zinc-900 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.values(terminals).map((t) => (
+          <Terminal
+            key={t.terminalId}
+            terminalId={t.terminalId}
+            lines={t.lines}
+            status={t.status}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
-export default ExecutionPage
+export default ExecutionPage;

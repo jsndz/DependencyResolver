@@ -88,7 +88,7 @@ router.get("/unreachable", (req, res) => {
   res.json(indices.map((i) => tasks[i]!.task));
 });
 
-router.get("/   ",async (req, res) => {
+router.get("/execute",async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");

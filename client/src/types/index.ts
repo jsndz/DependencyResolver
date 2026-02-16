@@ -11,8 +11,6 @@ export interface TaskRequest {
   command: string;
 }
 
-
-
 export interface Dependency {
   from: string;
   to: string;
@@ -38,3 +36,52 @@ export interface PathResponse {
   path?: string[];
   error?: string;
 }
+
+// ../types.ts
+
+export type TerminalOpenEvent = {
+  type: "terminal_open";
+  terminalId: string;
+};
+
+export type TaskStartedEvent = {
+  type: "task_started";
+  terminalId: string;
+  taskId: string;
+};
+
+export type TaskStdoutEvent = {
+  type: "task_stdout";
+  terminalId: string;
+  taskId: string;
+  data: string;
+};
+
+export type TaskStderrEvent = {
+  type: "task_stderr";
+  terminalId: string;
+  taskId: string;
+  data: string;
+};
+
+export type TaskFinishedEvent = {
+  type: "task_finished";
+  terminalId: string;
+  taskId: string;
+  status: "success" | "failed";
+};
+
+export type Events =
+  | TerminalOpenEvent
+  | TaskStartedEvent
+  | TaskStdoutEvent
+  | TaskStderrEvent
+  | TaskFinishedEvent;
+
+export type TerminalUIState = {
+  terminalId: string;
+  lines: string[];
+  status: "running" | "success" | "failed";
+};
+
+export type TerminalsState = Record<string, TerminalUIState>;
