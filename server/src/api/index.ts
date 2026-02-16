@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
 import crypto from "crypto";
 import { tasks, dependencies, type Task } from "../store/index.js";
 import {
@@ -23,7 +23,7 @@ router.post("/task", (req, res) => {
     id: crypto.randomUUID(),
     folder: req.body.folder,
     command: req.body.command,
-    dependency:[]
+    dependency: [],
   };
   tasks.push(t);
   res.json(t);
@@ -47,11 +47,11 @@ router.delete("/task/:id", (req, res) => {
 router.post("/dependency", (req, res) => {
   dependencies.push(req.body);
   console.log(req.body);
-  const t= tasks.find((t)=>t.id === req.body.to)
+  const t = tasks.find((t) => t.id === req.body.to);
   t?.dependency.push(req.body.from);
 
   console.log(t);
-  
+
   res.json({ ok: true });
 });
 
@@ -88,9 +88,15 @@ router.get("/unreachable", (req, res) => {
   res.json(indices.map((i) => tasks[i]!.task));
 });
 
-router.get("/execute", (req, res) => {
-  execute();
-  res.json({ ok: true });
+router.get("/   ",async (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders?.(); 
+  
+  await execute(res);
+  req.on("close", () => {
+  });
 });
 
 export default router;

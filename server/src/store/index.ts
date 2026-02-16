@@ -9,5 +9,7 @@ export type Dependency = { from: string; to: string };
 export type TaskStatus = "success" | "failed" | "pending" | "skipped";
 
 export const stats: Map<string, TaskStatus> = new Map<string, TaskStatus>();
+export const terminal: Map<string, { terminalId: string; taken: boolean }> = new Map<string,  { terminalId: string; taken: boolean }>();
+
 export const tasks: Task[] = [];
 export const dependencies: Dependency[] = [];
