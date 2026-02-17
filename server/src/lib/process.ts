@@ -81,7 +81,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
           type: "task_stdout",
           terminalId,
           taskId: task.id,
-          data: `execution@${task.task}: ${task.folder}$ ${d.toString()}`,
+          data: `execution@${task.task}:~${folder}$ ${command} \n ${d.toString()}`,
         })}\n\n`
       );
     });
