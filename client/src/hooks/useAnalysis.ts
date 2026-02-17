@@ -13,6 +13,8 @@ export function useAnalysis() {
       analyze(variables.type, { from: variables.from, to: variables.to }),
     onSuccess: (data, variables) => {
       setAnalysis(variables.type, data);
+      console.log(variables.type,data);
+      
       setError(null);
     },
     onError: () => {

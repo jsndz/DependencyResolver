@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Plus, Trash2, ListTodo, Loader2 } from "lucide-react";
-import { Task, TaskRequest } from "../types";
+import {  Task, TaskRequest } from "../types";
 import { useAddTask, useDeleteTask } from "../hooks/useTasks";
+
 
 export default function TaskManager({
   tasks,

@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { ArrowRight, Link2, Plus, Loader2 } from "lucide-react";
-import { Task, Dependency } from "../types";
 import { useAddDependency } from "../hooks/useTasks";
-
+import ReactFlow, {
+  Background,
+  Controls,
+  MarkerType,
+  type Node,
+  type Edge,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { Task, Dependency } from "../types";
 export default function DependencyForm({
   tasks,
   dependencies,
@@ -22,8 +29,7 @@ export default function DependencyForm({
     setTo("");
   };
 
-  const name = (id: string) =>
-    tasks.find((t) => t.id === id)?.task ?? id;
+  const name = (id: string) => tasks.find((t) => t.id === id)?.task ?? id;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -33,8 +39,12 @@ export default function DependencyForm({
             <Link2 size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">Dependencies</h2>
-            <p className="text-xs text-slate-500">Define task order (from → to)</p>
+            <h2 className="text-lg font-semibold text-slate-800">
+              Dependencies
+            </h2>
+            <p className="text-xs text-slate-500">
+              Define task order (from → to)
+            </p>
           </div>
         </div>
       </div>
@@ -49,7 +59,9 @@ export default function DependencyForm({
             >
               <option value="">From task</option>
               {tasks.map((t) => (
-                <option key={t.id} value={t.id}>{t.task}</option>
+                <option key={t.id} value={t.id}>
+                  {t.task}
+                </option>
               ))}
             </select>
             <span className="flex-shrink-0 text-slate-400" aria-hidden>
@@ -62,7 +74,9 @@ export default function DependencyForm({
             >
               <option value="">To task</option>
               {tasks.map((t) => (
-                <option key={t.id} value={t.id}>{t.task}</option>
+                <option key={t.id} value={t.id}>
+                  {t.task}
+                </option>
               ))}
             </select>
             <button
@@ -81,28 +95,113 @@ export default function DependencyForm({
         </form>
 
         <div>
-          <h3 className="text-sm font-medium text-slate-600 mb-3">Current dependencies ({dependencies.length})</h3>
+          <h3 className="text-sm font-medium text-slate-600 mb-3">
+            Current dependencies ({dependencies.length})
+          </h3>
           {dependencies.length === 0 ? (
             <div className="text-center py-8 px-4 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50/50">
               <Link2 size={28} className="mx-auto text-slate-300 mb-2" />
               <p className="text-sm text-slate-500">No dependencies defined</p>
             </div>
           ) : (
-            <ul className="space-y-2">
-              {dependencies.map((d, i) => (
-                <li
-                  key={i}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm"
-                >
-                  <span className="font-medium text-slate-800">{name(d.from)}</span>
-                  <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
-                  <span className="font-medium text-slate-800">{name(d.to)}</span>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <div>
+                <ul className="space-y-2">
+                  {dependencies.map((d, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-100 text-sm"
+                    >
+                      <span className="font-medium text-slate-800">
+                        {name(d.from)}
+                      </span>
+                      <ArrowRight
+                        size={16}
+                        className="text-slate-400 flex-shrink-0"
+                      />
+                      <span className="font-medium text-slate-800">
+                        {name(d.to)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <DependencyGraph apiData={{ tasks, dependencies }} />
+            </div>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
+  const nodes: Node[] = tasks.map((task, index) => ({
+    id: task.id,
+    type: "default",
+    data: {
+      label: (
+        <div className="text-left">
+          <div className="font-semibold text-slate-800">{task.task}</div>
+          <div className="text-xs text-slate-500">{task.folder}</div>
+        </div>
+      ),
+    },
+    position: {
+      x: 100,
+      y: index * 120,
+    },
+    style: {
+      border: "2px solid #2563eb", // blue-600
+      borderRadius: "10px",
+      background: "#ffffff",
+      padding: "10px",
+      width: 180,
+      boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+    },
+  }));
+
+  const edges: Edge[] = deps.map((d) => ({
+    id: `${d.from}->${d.to}`,
+    source: d.from,
+    target: d.to,
+    type: "smoothstep",
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#2563eb",
+    },
+    style: {
+      stroke: "#2563eb",
+      strokeWidth: 2,
+    },
+  }));
+
+  return { nodes, edges };
+}
+export  function DependencyGraph({
+  apiData,
+}: {
+  apiData: { tasks: Task[]; dependencies: Dependency[] };
+}) {
+  const { nodes, edges } = toReactFlowGraph(
+    apiData.tasks,
+    apiData.dependencies
+  );
+
+  return (
+    <div className="w-full h-[600px] rounded-xl border border-slate-200 bg-slate-50">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        fitView
+        nodesConnectable={false}
+        nodesDraggable={true}
+        panOnScroll
+        zoomOnScroll
+      >
+        <Background gap={18} size={1} />
+        <Controls />
+      </ReactFlow>
     </div>
   );
 }
