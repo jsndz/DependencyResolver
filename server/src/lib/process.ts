@@ -52,6 +52,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
       `data: ${JSON.stringify({
         type: "terminal_open",
         terminalId,
+        name: task.task 
       })}\n\n`
     );
 
@@ -60,6 +61,8 @@ export function runCommand(task: Task, res: Response): Promise<void> {
         type: "task_started",
         terminalId,
         taskId: task.id,
+        command: command,
+        folder: folder,
       })}\n\n`
     );
 
@@ -78,7 +81,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
           type: "task_stdout",
           terminalId,
           taskId: task.id,
-          data: d.toString(),
+          data: `execution@${task.task}: ${task.folder}$ ${d.toString()}`,
         })}\n\n`
       );
     });

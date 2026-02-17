@@ -13,9 +13,26 @@ export function terminalsReducer(state: State, event: Events): State {
             terminalId: event.terminalId,
             lines: [],
             status: "running",
+            name: event.name,
           },
         };
       }
+
+      case "task_started":{
+        if (state[event.terminalId]) return state;
+  
+        return {
+          ...state,
+          [event.terminalId]: {
+            terminalId: event.terminalId,
+            lines: [],
+            status: "running",
+            
+            folder: event.folder
+          },
+        };
+      }
+
   
       case "task_stdout":
       case "task_stderr": {

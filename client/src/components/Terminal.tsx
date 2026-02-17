@@ -2,6 +2,7 @@ type TerminalCardProps = {
     terminalId: string;
     lines: string[];
     status: "running" | "success" | "failed";
+    name:string;
   };
   
   const statusColor = {
@@ -10,14 +11,14 @@ type TerminalCardProps = {
     failed: "bg-red-400",
   };
   
-  const Terminal = ({ terminalId, lines, status }: TerminalCardProps) => {
+  const Terminal = ({ terminalId, lines, status,name }: TerminalCardProps) => {
     return (
       <div className="flex flex-col rounded-lg overflow-hidden shadow-lg bg-black border border-zinc-700">
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-zinc-800 text-xs text-zinc-300">
           <div className="flex items-center gap-2">
             <span className={`h-2 w-2 rounded-full ${statusColor[status]}`} />
-            <span>{terminalId}</span>
+            <span>{name}</span>
           </div>
           <span className="uppercase">{status}</span>
         </div>

@@ -37,17 +37,19 @@ export interface PathResponse {
   error?: string;
 }
 
-// ../types.ts
-
 export type TerminalOpenEvent = {
   type: "terminal_open";
   terminalId: string;
+  name: string;
 };
 
 export type TaskStartedEvent = {
   type: "task_started";
   terminalId: string;
   taskId: string;
+ 
+  folder: string;
+  command: string;
 };
 
 export type TaskStdoutEvent = {
@@ -82,6 +84,8 @@ export type TerminalUIState = {
   terminalId: string;
   lines: string[];
   status: "running" | "success" | "failed";
+  name?: string;
+  folder?: string;
 };
 
 export type TerminalsState = Record<string, TerminalUIState>;

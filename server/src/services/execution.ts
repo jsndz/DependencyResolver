@@ -2,9 +2,11 @@ import { parallelExecution, resolveDependencies } from "./graph.js";
 import { tasks, dependencies, stats, type Task } from "../store/index.js";
 import { runCommand } from "../lib/process.ts";
 import type { Response } from "express";
+
 function canRun(task: Task): boolean {
   return task.dependency.every((dep) => stats.get(dep) === "success");
 }
+
 export async function execute(res: Response) {
   const { ok, order } = resolveDependencies(dependencies, tasks);
   console.log(order);
@@ -39,10 +41,5 @@ export async function execute(res: Response) {
     });
   }
 
-  // return {
-  //   ok: true,
-  //   order,
-  //   levels: parallels.levels,
-  //   stats: Object.fromEntries(stats),
-  // };
+
 }

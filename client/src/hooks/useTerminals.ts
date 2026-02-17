@@ -1,9 +1,9 @@
 import { useEffect, useReducer, useRef } from "react";
 import { terminalsReducer } from "../config/handleSSE";
-import { Events } from "../types";
+import { Events, TerminalUIState } from "../types";
 
 export function useTerminals() {
-  const [state, dispatcher] = useReducer(terminalsReducer, {});
+  const [state, dispatcher] = useReducer(terminalsReducer, {} as Record<string, TerminalUIState>);
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
