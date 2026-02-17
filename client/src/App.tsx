@@ -8,11 +8,13 @@ import ExecutionPage from "./pages/ExecutionPage";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="analysis" element={<AnalysisPage />} />
-        <Route path="execution" element={<ExecutionPage />} />
+      {/* Layout wrapper */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/analysis" element={<AnalysisPage />} />
+        <Route path="/execution" element={<ExecutionPage />} />
       </Route>
     </Routes>
   );

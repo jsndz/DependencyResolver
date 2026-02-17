@@ -7,22 +7,24 @@ export const fetchTasks = async (): Promise<{
 }> => {
   const { data } = await api.get("/tasks");
   console.log(data);
-  
+
   return data;
 };
 
-export const addTask = (task: TaskRequest) =>
-  api.post("/task", task);
+export const addTask = async (task: TaskRequest) => {
+  const { data } = await api.post("/task", task);
+  console.log(data)
+  return data;
+};
 
-export const deleteTask = (id: string) =>
-  api.delete(`/task/${id}`);
+export const deleteTask = (id: string) => api.delete(`/task/${id}`);
 
 export const addDependency = (from: string, to: string) =>
   api.post("/dependency", { from, to });
 
 export const analyze = async (
   type: string,
-  params?: { from?: string; to?: string }
+  params?: { from?: string; to?: string },
 ) => {
   const { data } =
     type === "path"
@@ -32,10 +34,9 @@ export const analyze = async (
   return data;
 };
 
-
-export const execute  =async () =>{
+export const execute = async () => {
   const { data } = await api.get("/execute");
   console.log(data);
-  
+
   return data;
-}
+};
