@@ -40,3 +40,35 @@ export const execute = async () => {
 
   return data;
 };
+
+export const uploadYaml = async (file: File) => {
+  const text = await file.text();
+  const { data } = await api.post("/yaml", { yaml: text });
+  return data;
+};
+
+export const downloadYaml = async (workflowName: string) => {
+  const encoded = encodeURIComponent(workflowName);
+  const resp = await api.get(`/yaml/${encoded}`, {
+    responseType: "blob",
+    headers: { Accept: "application/x-yaml" },
+  });
+
+  const blob = new Blob([resp.data], { type: "application/x-yaml" });
+
+  const disposition = resp.headers?.["content-disposition"] || resp.headers?.["Content-Disposition"];
+  let filename = `${workflowName}.yaml`;
+  if (disposition) {
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+    if (match) filename = match[1];
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};

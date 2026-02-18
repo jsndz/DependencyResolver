@@ -78,3 +78,9 @@ I tried to get the folder through the browser input tag. But was restricted for 
 Which was only possible if i switch from browser to actual application.
 So for now user has to maually input the folder path.
 
+Phase 8: yaml Parser
+Date:  Feb 18, 2026
+
+Since the whole workflow lives in-memory implemented a feature that converts the workflow to dag and then tag to yaml
+This help in reusability.
+integrated the yaml config in the project

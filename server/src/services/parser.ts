@@ -1,5 +1,5 @@
 import { tasks, type Dependency, type Task } from "../store";
-import { stringify } from "yaml";
+import { parse, stringify } from "yaml";
 interface DagTask {
   folder: string;
   command: string;
@@ -51,8 +51,38 @@ export function WorkFlowToDAG(
   };
 }
 
+export function dagToWorkflow(dag: Dag) {
+  const tasks: Task[] = [];
+  const dependencies: Dependency[] = [];
+
+  for (const [id, t] of Object.entries(dag.tasks)) {
+    tasks.push({
+      id,
+      task: id,              
+      folder: t.folder,
+      command: t.command,
+      dependency: []      
+    });
+  }
+
+  for (const [to, t] of Object.entries(dag.tasks)) {
+    for (const from of t.dependsOn ?? []) {
+      dependencies.push({ from, to });
+
+      const task = tasks.find(x => x.id === to)!;
+      task.dependency.push(from);
+    }
+  }
+
+  return { tasks, dependencies };
+}
+
+
 export function dagToYaml(dag: Dag): string {
   return stringify(dag);
 }
 
 
+export function yamlToDag(yaml: string): Dag {
+  return parse(yaml);
+}

@@ -10,6 +10,7 @@ import {
   unreachableNodes,
 } from "../services/graph.js";
 import { execute } from "../services/execution.js";
+import { yamlToDag, dagToWorkflow, dagToYaml, WorkFlowToDAG } from "../services/parser.js";
 
 const router = Router();
 
@@ -102,5 +103,47 @@ router.get("/execute",async (req, res) => {
 
   res.end();
 });
+
+router.post("/yaml", (req, res) => {
+  const yaml = req.body?.yaml;
+  if (typeof yaml !== "string") {
+    return res.status(400).json({ error: "Missing yaml in body" });
+  }
+console.log("hello");
+
+  try {
+    const dag = yamlToDag(yaml);
+    const { tasks: newTasks, dependencies: newDeps } = dagToWorkflow(dag as any);
+
+    tasks.length = 0;
+    dependencies.length = 0;
+
+    for (const t of newTasks) tasks.push(t as any);
+    for (const d of newDeps) dependencies.push(d as any);
+console.log(tasks,dependencies);
+
+
+    res.json({ ok: true });
+  } catch (err: any) {
+    console.error(err);
+    res.status(400).json({ error: err?.message ?? String(err) });
+  }
+});
+
+router.get("/yaml/:workflow",(req,res)=>{
+  try {
+    const dag = WorkFlowToDAG(tasks,dependencies,req.params.workflow,1);
+    const yaml = dagToYaml(dag)
+        res.setHeader("Content-Type", "application/x-yaml");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${req.params.workflow}.yaml"`
+    );
+
+    res.send(yaml);
+  } catch (err) {
+    res.status(400).json({ error: String(err) });
+  }
+})
 
 export default router;

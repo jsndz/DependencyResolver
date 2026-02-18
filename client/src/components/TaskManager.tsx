@@ -5,7 +5,8 @@ import { useAddDependency, useAddTask, useDeleteTask } from "../hooks/useTasks";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { cn } from "./lib/utils";
+import { api } from "../config/api";
+import { fetchTasks, uploadYaml } from "../api/tasks";
 
 export default function TaskManager({ onLink }: { onLink: () => void }) {
   const addDep = useAddDependency();
@@ -18,6 +19,19 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
   const deleteTask = useDeleteTask();
   const [lastTaskId, setLastTaskId] = useState<string | null>(null);
   const [newFlow, setNewflow] = useState<boolean>(true);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    console.log(file);
+
+    reader.readAsText(file);
+    await uploadYaml(file);
+    e.currentTarget.value = "";
+    await fetchTasks();
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskName.trim()) return;
@@ -105,6 +119,32 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
         <Button variant="secondary" className="flex-1" onClick={onLink}>
           <Link className="h-4 w-4 mr-2" />
           Link Workflow
+        </Button>
+      </div>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">or</span>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".yaml,.yml,application/x-yaml,text/yaml"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        <Button
+          variant="secondary"
+          className="flex-1"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Link className="h-4 w-4 mr-2" />
+          Upload YAML
         </Button>
       </div>
     </Card>
