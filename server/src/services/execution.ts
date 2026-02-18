@@ -9,7 +9,6 @@ function canRun(task: Task): boolean {
 
 export async function execute(res: Response) {
   const { ok, order } = resolveDependencies(dependencies, tasks);
-  console.log(order);
 
   if (!ok) {
     return { ok: false, error: "cycle detected" };
@@ -20,7 +19,6 @@ export async function execute(res: Response) {
   if (!parallels.ok || !parallels.levels) {
     return { ok: false, error: "invalid execution plan" };
   }
-  console.log(parallels);
   for (const level of parallels.levels) {
     const runnable: Task[] = level.filter((task) => canRun(task));
 

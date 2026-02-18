@@ -1,4 +1,5 @@
-Phase 1:
+Phase 1: 
+Date: Feb 12, 2026
 
 The Project Initial Idea was to build dependency resolver. It just served html css and js as static files
 
@@ -10,7 +11,7 @@ You can get:
 Each Task acted as a node and each dependency as a edge
 
 Phase 2: Convert the project into server
-
+Date: Feb 14, 2026
 THe project had lot of files and everything was getting cluttered 
 So converted to a server which serves static files and 
 algorithm core will be handled in backend. 
@@ -25,11 +26,13 @@ Added new features:
 
 
 Phase 3: Build frontend
+Date: Feb 15, 2026
  
 To make UI better, build frontend 
 Vibe coded the boiler plate code and then built features on top of that.
 
 Phase 4: tasks -> workflow
+Date: Feb 16, 2026
 
 Rather than keeping it as a dependency resolver,
 I plan to add commands and folder to the task input. 
@@ -41,6 +44,7 @@ Example will a microservice which has lot of services and commands you can,
 lint build test and run each microservice separately and if one is dependent on other it will execute in order.
 
 Phase 5: Upgrading the backend
+Date: Feb 16, 2026
 
 take command from frontend and store in in memory of bun. 
 Then run the commands parallelly based on the parellel planning of task.
@@ -49,6 +53,7 @@ Used "child_process" to do this.
 Also wrote Tests for this.
 
 Phase 6: Serving the output in frontend
+Date: Feb 16, 2026
 
 The data needs to be streamed to the frontend.
 Normal http won't work. So had to either go with websocket or SSE.
@@ -60,5 +65,17 @@ same path only one terminal is enough to show the output in frontend.
 
 
 Phase 7: Designing UI for graph and terminal
+Date: Feb 17, 2026
 
 Gave proper UI for graph and terminal
+
+
+Phase 8: Designing UI and UX for the Project
+Date:  Feb 17, 2026
+
+Based on the recommendation of mentor, started improving UI/UX.
+Designed user flow, wireframe(for some pages), colors, fonts and style.
+
+
+Phase 9: Browser Restriction
+Date: Feb 18, 2026

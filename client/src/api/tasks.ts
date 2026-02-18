@@ -6,14 +6,15 @@ export const fetchTasks = async (): Promise<{
   dependencies: Dependency[];
 }> => {
   const { data } = await api.get("/tasks");
-  console.log(data);
+  console.log("task and dep \n",data);
 
   return data;
 };
 
 export const addTask = async (task: TaskRequest) => {
   const { data } = await api.post("/task", task);
-  console.log(data)
+  console.log("added task\n",data);
+  
   return data;
 };
 
@@ -36,7 +37,6 @@ export const analyze = async (
 
 export const execute = async () => {
   const { data } = await api.get("/execute");
-  console.log(data);
 
   return data;
 };

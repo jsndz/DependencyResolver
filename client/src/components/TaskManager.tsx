@@ -13,7 +13,6 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
   const [taskName, setTaskName] = useState("");
   const [taskFolder, setTaskFolder] = useState("");
   const [taskCommand, setTaskCommand] = useState("");
-  const folderPickerRef = useRef<HTMLInputElement>(null);
 
   const addTask = useAddTask();
   const deleteTask = useDeleteTask();
@@ -41,7 +40,6 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
     });
     setTaskName("");
     setTaskCommand("");
-    setTaskFolder("");
     setNewflow(false);
   };
 
@@ -55,43 +53,10 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
           onChange={(e) => setTaskName(e.target.value)}
         />
 
-        <div className="relative">
-          <Input
-            placeholder="Working directory (click to select)"
-            value={taskFolder || ""}
-            readOnly
-            onClick={() => folderPickerRef.current?.click()}
-            className={cn(
-              "cursor-pointer pr-10",
-              taskFolder && "font-medium text-foreground",
-            )}
-          />
-
-          <button
-            type="button"
-            onClick={() => folderPickerRef.current?.click()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            📁
-          </button>
-        </div>
-
-        <input
-          ref={folderPickerRef}
-          type="file"
-          className="hidden"
-          onChange={(e) => {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-
-            const relativePath = (files[0] as any).webkitRelativePath;
-            const folderName = relativePath.split("/")[0];
-
-            setTaskFolder(folderName);
-
-            e.currentTarget.value = "";
-          }}
-          {...({ webkitdirectory: true, directory: true } as any)}
+        <Input
+          placeholder="Working directory (e.g. /home/jaison/Pictures)"
+          value={taskFolder}
+          onChange={(e) => setTaskFolder(e.target.value)}
         />
 
         <Input
@@ -130,6 +95,7 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
           onClick={() => {
             setNewflow(true);
             setLastTaskId(null);
+            setTaskFolder("");
           }}
         >
           <ListTodo className="h-4 w-4 mr-2" />

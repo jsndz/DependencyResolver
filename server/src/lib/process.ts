@@ -40,6 +40,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
   return new Promise((resolve, reject) => {
     const command = task.command;
     const folder = task.folder;
+console.log(command,folder);
 
     if (!command || typeof command !== "string") {
       reject(new Error(`Invalid command: ${command}`));
@@ -68,6 +69,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
 
     const parts = command.trim().split(/\s+/);
     const cmd = parts[0];
+console.log(folder);
 
     const child = spawn(cmd!, parts.slice(1), {
       cwd: folder,
@@ -76,6 +78,8 @@ export function runCommand(task: Task, res: Response): Promise<void> {
     }) as { stdout: Readable; stderr: Readable };
 
     child.stdout.on("data", (d) => {
+      console.log(d);
+      
       res.write(
         `data: ${JSON.stringify({
           type: "task_stdout",
@@ -87,6 +91,8 @@ export function runCommand(task: Task, res: Response): Promise<void> {
     });
 
     child.stderr.on("data", (d) => {
+      console.log(d);
+      
       res.write(
         `data: ${JSON.stringify({
           type: "task_stderr",
@@ -97,23 +103,26 @@ export function runCommand(task: Task, res: Response): Promise<void> {
       );
     });
 
-    (child as any).on("close", (code: number) => {
+    (child as any).on("close", (code: number | null) => {
       const entry = terminal.get(task.id);
       if (entry) {
         entry.taken = false;
       }
+      const ok = code === 0 || code === null;
     
       res.write(
         `data: ${JSON.stringify({
           type: "task_finished",
           terminalId,
           taskId: task.id,
-          status: code === 0 ? "success" : "failed",
+          status: ok ? "success" : "failed",
+          exitCode: code,
         })}\n\n`
       );
-
       resolve();
     });
+    
+
 
     (child as any).on("error", reject);
   });

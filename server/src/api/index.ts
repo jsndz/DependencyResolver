@@ -46,11 +46,9 @@ router.delete("/task/:id", (req, res) => {
 
 router.post("/dependency", (req, res) => {
   dependencies.push(req.body);
-  console.log(req.body);
   const t = tasks.find((t) => t.id === req.body.to);
   t?.dependency.push(req.body.from);
 
-  console.log(t);
 
   res.json({ ok: true });
 });
