@@ -92,9 +92,15 @@ router.get("/execute",async (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders?.(); 
   
-  await execute(res);
-  req.on("close", () => {
-  });
+  const result = await execute(res);
+  res.write(
+    `data: ${JSON.stringify({
+      type: "execution_finished",
+      result,
+    })}\n\n`
+  );
+
+  res.end();
 });
 
 export default router;

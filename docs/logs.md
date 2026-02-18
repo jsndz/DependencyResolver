@@ -23,11 +23,9 @@ Added new features:
 - Terminal Task(end nodes) - task with outdegree 0
 - Unreachable Tasks - Visited as false
 
-
-
 Phase 3: Build frontend
 Date: Feb 15, 2026
- 
+
 To make UI better, build frontend 
 Vibe coded the boiler plate code and then built features on top of that.
 

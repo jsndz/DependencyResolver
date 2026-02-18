@@ -40,4 +40,10 @@ export async function execute(res: Response) {
   }
 
 
+  return {
+    ok: true,
+    order,
+    levels: parallels.levels.map(level => level.map(t => t.id)),
+    stats: Object.fromEntries(stats),
+  };
 }
