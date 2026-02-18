@@ -76,6 +76,7 @@ Date:  Feb 17, 2026
 Based on the recommendation of mentor, started improving UI/UX.
 Designed user flow, wireframe(for some pages), colors, fonts and style.
 
+I tried to get the folder through the browser input tag. But was restricted for relative path. I needed absoulte path.
+Which was only possible if i switch from browser to actual application.
+So for now user has to maually input the folder path.
 
-Phase 9: Browser Restriction
-Date: Feb 18, 2026
