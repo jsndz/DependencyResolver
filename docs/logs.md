@@ -90,3 +90,4 @@ Date: Feb 19,2026
 
 Designed Home page UI added and modified components this helped me solidify understanding about relative and absolute.
 And useScroll and useTransform.
+Redesigned the whole "/tasks" page for better User Experience inspired by figma.

@@ -3,7 +3,7 @@ import Layout from "./pages/Layout";
 import HomePage from "./pages/HomePage";
 import TasksPage from "./pages/TasksPage";
 import AnalysisPage from "./pages/AnalysisPage";
-import ExecutionPage from "./pages/ExecutionPage";
+import {ExecutionPage} from "./pages/ExecutionPage";
 
 function App() {
   return (
@@ -13,8 +13,8 @@ function App() {
 
       <Route element={<Layout />}>
         <Route path="/analysis" element={<AnalysisPage />} />
-        <Route path="/execution" element={<ExecutionPage />} />
       </Route>
+      <Route path="/execution" element={<ExecutionPage />} />
     </Routes>
   );
 }

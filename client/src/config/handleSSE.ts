@@ -3,65 +3,60 @@ import { Events, TerminalUIState } from "../types";
 type State = Record<string, TerminalUIState>;
 
 export function terminalsReducer(state: State, event: Events): State {
-    switch (event.type) {
-      case "terminal_open": {
-        if (state[event.terminalId]) return state;
-  
-        return {
-          ...state,
-          [event.terminalId]: {
-            terminalId: event.terminalId,
-            lines: [],
-            status: "running",
-            name: event.name,
-          },
-        };
-      }
+  switch (event.type) {
+    case "terminal_open": {
+      if (state[event.terminalId]) return state;
 
-      case "task_started":{
-        if (state[event.terminalId]) return state;
-  
-        return {
-          ...state,
-          [event.terminalId]: {
-            terminalId: event.terminalId,
-            lines: [],
-            status: "running",
-            
-            folder: event.folder
-          },
-        };
-      }
+      return {
+        ...state,
+        [event.terminalId]: {
+          terminalId: event.terminalId,
 
-  
-      case "task_stdout":
-      case "task_stderr": {
-        const terminal = state[event.terminalId];
-        if (!terminal) return state;
-  
-        return {
-          ...state,
-          [event.terminalId]: {
-            ...terminal,
-            lines: [...terminal.lines, event.data],
-          },
-        };
-      }
-  
-      case "task_finished": {
-        const terminal = state[event.terminalId];
-        if (!terminal) return state;
-  
-        return {
-          ...state,
-          [event.terminalId]: {
-            ...terminal,
-            status: event.status,
-          },
-        };
-      }
-  
-      default:
-        return state;
+          status: "running",
+          name: event.name,
+        },
+      };
     }
+
+    case "task_started": {
+      const existing = state[event.terminalId];
+      return {
+        ...state,
+        [event.terminalId]: {
+          ...(existing ?? {}),
+          terminalId: event.terminalId,
+          status: "running",
+        },
+      };
+    }
+
+    case "task_stdout":
+    case "task_stderr": {
+      const terminal = state[event.terminalId];
+      if (!terminal) return state;
+
+      return {
+        ...state,
+        [event.terminalId]: {
+          ...terminal,
+        },
+      };
+    }
+
+    case "task_finished": {
+      const terminal = state[event.terminalId];
+      if (!terminal) return state;
+
+      return {
+        ...state,
+        [event.terminalId]: {
+          ...terminal,
+          status: event.status,
+        },
+      };
+    }
+
+    default:
+      return state;
   }
+}

@@ -47,7 +47,6 @@ export type TaskStartedEvent = {
   type: "task_started";
   terminalId: string;
   taskId: string;
- 
   folder: string;
   command: string;
 };
@@ -82,7 +81,7 @@ export type Events =
 
 export type TerminalUIState = {
   terminalId: string;
-  lines: string[];
+  
   status: "running" | "success" | "failed";
   name?: string;
   folder?: string;

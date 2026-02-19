@@ -1,40 +1,69 @@
-type TerminalCardProps = {
-    terminalId: string;
-    lines: string[];
-    status: "running" | "success" | "failed";
-    name:string;
-  };
-  
-  const statusColor = {
-    running: "bg-yellow-400",
-    success: "bg-green-400",
-    failed: "bg-red-400",
-  };
-  
-  const Terminal = ({ terminalId, lines, status,name }: TerminalCardProps) => {
-    return (
-      <div className="flex flex-col rounded-lg overflow-hidden shadow-lg bg-black border border-zinc-700">
-        {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 bg-zinc-800 text-xs text-zinc-300">
-          <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${statusColor[status]}`} />
-            <span>{name}</span>
-          </div>
-          <span className="uppercase">{status}</span>
-        </div>
-  
-        {/* Body */}
-        <div className="flex-1 p-3 overflow-y-auto font-mono text-sm text-zinc-100 whitespace-pre-wrap">
-          {lines.length === 0 ? (
-            <span className="text-zinc-500">Waiting for output…</span>
-          ) : (
-            lines.map((line, i) => (
-              <div key={i}>{line}</div>
-            ))
-          )}
+import { useEffect, useRef } from "react";
+import { Terminal as XTerm } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
+import "@xterm/xterm/css/xterm.css";
+type Props = {
+  terminalId: string;
+  status: "running" | "success" | "failed";
+  name: string;
+  register: (id: string, term: XTerm) => void;
+};
+
+export default function Terminal({
+  terminalId,
+  status,
+  name,
+  register,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const term = new XTerm({
+      cursorBlink: true,
+      scrollback: 2000,
+      convertEol: true,
+      theme: {
+        background: "#000000",
+      },
+    });
+
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+
+    term.open(containerRef.current);
+    fitAddon.fit();
+
+    register(terminalId, term);
+
+    const resize = () => fitAddon.fit();
+    window.addEventListener("resize", resize);
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      term.dispose();
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col rounded-lg overflow-hidden bg-black border border-zinc-700">
+      <div className="flex items-center justify-between px-3 py-2 bg-zinc-800 text-xs text-zinc-300">
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${
+              status === "running"
+                ? "bg-yellow-400"
+                : status === "success"
+                ? "bg-green-400"
+                : "bg-red-400"
+            }`}
+          />
+          <span>{name}</span>
         </div>
       </div>
-    );
-  };
-  
-  export default Terminal;
+
+      <div className="h-80" ref={containerRef} />
+    </div>
+  );
+}
