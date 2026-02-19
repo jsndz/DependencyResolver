@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "../lib/utils";
-import { motion, MotionValue } from "motion/react";
-import React from "react";
+import { motion, MotionValue, useScroll, useTransform } from "motion/react";
+import React, { useRef } from "react";
 
 const transition = {
   duration: 0,
@@ -19,19 +19,38 @@ export const GoogleGeminiEffect = ({
   description?: string;
   className?: string;
 }) => {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"],
+  });
+  const phase = useTransform(
+    scrollYProgress,
+    [0, 0.25, 0.5, 0.75, 1],
+    [0, 1, 2, 3, 4],
+  );
+  const createOpacity = useTransform(phase, [0, 1], [1, 0]);
+  const buildOpacity = useTransform(phase, [ 1, 2], [1, 0]);
+  const runOpacity = useTransform(phase, [1, 2, 3], [0, 1, 0]);
+  const execOpacity = useTransform(phase, [2, 3], [0, 1]);
   return (
+    <div ref={containerRef} className="relative h-[300vh]">
+
     <div className={cn("sticky top-80", className)}>
       <p className="text-lg md:text-7xl font-normal pb-4 text-center bg-clip-text text-transparent bg-gradient-to-b from-neutral-100 to-neutral-300">
-        {title || `Build with Aceternity UI`}
+        {title || `Build with Purpose`}
       </p>
       <p className="text-xs md:text-xl font-normal text-center text-neutral-400 mt-4 max-w-lg mx-auto">
-        {description ||
-          `Scroll this component and see the bottom SVG come to life wow this
-        works!`}
+        {description || `Define workflows that run exactly as intended.`}
       </p>
-      <div className="w-full h-[890px] -top-60 md:-top-40  flex items-center justify-center bg-red-transparent absolute ">
-        <button className="font-bold bg-white rounded-full md:px-4 md:py-2 px-2 py-1 md:mt-24 mt-8 z-30 md:text-base text-black text-xs  w-fit mx-auto ">
-          ui.aceternity.com
+      <div ref={containerRef} className="w-full h-[890px] -top-60 md:-top-40  flex items-center justify-center bg-red-transparent absolute ">
+        <button className="font-bold bg-white rounded-full h-10 w-40 md:px-4 md:py-2 px-2 py-1 md:mt-24 mt-8 z-30 md:text-base text-black text-xs   mx-auto ">
+          <div  className="relative h-20 overflow-hidden">
+            <motion.span className="absolute inset-0" style={{ opacity: createOpacity }}>Create</motion.span>
+            <motion.span className="absolute inset-0"  style={{ opacity: buildOpacity }}>Build</motion.span>
+            <motion.span className="absolute inset-0"  style={{ opacity: runOpacity }}>Run</motion.span>
+            <motion.span className="absolute inset-0"  style={{ opacity: execOpacity }}>Execute</motion.span>
+          </div>
         </button>
       </div>
       <svg
@@ -156,6 +175,7 @@ export const GoogleGeminiEffect = ({
           </filter>
         </defs>
       </svg>
+    </div>
     </div>
   );
 };

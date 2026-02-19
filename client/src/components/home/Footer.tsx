@@ -1,29 +1,29 @@
-import { Zap } from 'lucide-react';
+import { Zap } from "lucide-react";
 
 export function Footer() {
   const footerLinks = {
     pages: [
-      { label: 'All Products', href: '#' },
-      { label: 'Studio', href: '#' },
-      { label: 'Clients', href: '#' },
-      { label: 'Pricing', href: '#' },
-      { label: 'Blog', href: '#' },
+      { label: "All Products", href: "#" },
+      { label: "Studio", href: "#" },
+      { label: "Clients", href: "#" },
+      { label: "Pricing", href: "#" },
+      { label: "Blog", href: "#" },
     ],
     socials: [
-      { label: 'Facebook', href: '#' },
-      { label: 'Instagram', href: '#' },
-      { label: 'Twitter', href: '#' },
-      { label: 'LinkedIn', href: '#' },
+      { label: "Facebook", href: "#" },
+      { label: "Instagram", href: "#" },
+      { label: "Twitter", href: "#" },
+      { label: "LinkedIn", href: "#" },
     ],
     legal: [
-      { label: 'Privacy Policy', href: '#' },
-      { label: 'Terms of Service', href: '#' },
-      { label: 'Cookie Policy', href: '#' },
+      { label: "Privacy Policy", href: "#" },
+      { label: "Terms of Service", href: "#" },
+      { label: "Cookie Policy", href: "#" },
     ],
     register: [
-      { label: 'Sign Up', href: '#' },
-      { label: 'Login', href: '#' },
-      { label: 'Forgot Password', href: '#' },
+      { label: "Sign Up", href: "#" },
+      { label: "Login", href: "#" },
+      { label: "Forgot Password", href: "#" },
     ],
   };
 
@@ -32,7 +32,7 @@ export function Footer() {
       {/* Background decorative text */}
       <div className="absolute bottom-0 left-0 pointer-events-none opacity-5">
         <div className="text-[20rem] font-bold tracking-tighter leading-none text-white whitespace-nowrap">
-          DevStudio
+           Workflows
         </div>
       </div>
 
@@ -44,15 +44,15 @@ export function Footer() {
             {/* Brand Column */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-black" strokeWidth={3} />
-                </div>
-                <span className="text-lg font-semibold text-white">
-                  DevStudio
-                </span>
+                <a
+                  href="#"
+                  className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
+                >
+                  <img src="/logo.png" alt="logo" width={200} height={220} />
+                </a>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                © 2024 DevStudio. All rights reserved.
+                © 2024 Orchestra. All rights reserved.
               </p>
             </div>
 

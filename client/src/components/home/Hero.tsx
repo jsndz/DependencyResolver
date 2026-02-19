@@ -29,6 +29,8 @@ export function Hero() {
           pathLengthFourth,
           pathLengthFifth,
         ]}
+        title="Build workflows for Development"
+        description="Define workflows that run exactly as intended."
       />
     </div>
   );
