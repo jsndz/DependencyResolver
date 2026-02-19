@@ -1,66 +1,61 @@
-import { useRef, useState } from "react";
-import { Plus, Trash2, ListTodo, Loader2, Link } from "lucide-react";
-import { Task, TaskRequest } from "../types";
-import { useAddDependency, useAddTask, useDeleteTask } from "../hooks/useTasks";
-import { Card } from "./ui/card";
-import { Input } from "./ui/input";
+import { useState } from "react";
+import { Plus, ListTodo, Link, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { api } from "../config/api";
-import { fetchTasks, uploadYaml } from "../api/tasks";
+import { Input } from "./ui/input";
+import { Card } from "./ui/card";
+import { useAddTask, useAddDependency } from "../hooks/useTasks";
+import { TaskRequest } from "../types";
+import DependencyForm from "./DependencyForm";
 
-export default function TaskManager({ onLink }: { onLink: () => void }) {
+export default function WorkflowControls({ tasks, dependencies }: any) {
+  const addTask = useAddTask();
   const addDep = useAddDependency();
 
+  const [mode, setMode] = useState<"none" | "add" | "new" | "link">("none");
+  const [newFlow, setNewflow] = useState<boolean>(true);
   const [taskName, setTaskName] = useState("");
   const [taskFolder, setTaskFolder] = useState("");
   const [taskCommand, setTaskCommand] = useState("");
-
-  const addTask = useAddTask();
-  const deleteTask = useDeleteTask();
   const [lastTaskId, setLastTaskId] = useState<string | null>(null);
-  const [newFlow, setNewflow] = useState<boolean>(true);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    console.log(file);
-
-    reader.readAsText(file);
-    await uploadYaml(file);
-    e.currentTarget.value = "";
-    await fetchTasks();
-  };
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddTask = (isNewWorkflow: boolean) => {
     if (!taskName.trim()) return;
+
     const task: TaskRequest = {
       task: taskName,
-      command: taskCommand,
       folder: taskFolder,
+      command: taskCommand,
     };
 
     addTask.mutate(task, {
       onSuccess: (newTask) => {
-        if (lastTaskId) {
+        if (!isNewWorkflow && lastTaskId) {
           addDep.mutate({
             from: lastTaskId,
             to: newTask.id,
           });
         }
+
         setLastTaskId(newTask.id);
       },
     });
+
     setTaskName("");
     setTaskCommand("");
     setNewflow(false);
   };
 
   return (
-    <Card className="p-6 space-y-6">
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+   <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+  <div className="relative flex flex-col items-center">
+
+    {/* Popup ABOVE */}
+    {(mode === "add" || mode === "new") && (
+      <Card className="absolute bottom-full mb-4 w-80 p-4 space-y-3 shadow-xl">
+        <Button variant="ghost" size="sm" onClick={() => setMode("none")}>
+          ← Back
+        </Button>
+
         <Input
           placeholder="Step name"
           value={taskName}
@@ -68,85 +63,71 @@ export default function TaskManager({ onLink }: { onLink: () => void }) {
         />
 
         <Input
-          placeholder="Working directory (e.g. /home/jaison/Pictures)"
+          placeholder="Working directory"
           value={taskFolder}
           onChange={(e) => setTaskFolder(e.target.value)}
         />
 
         <Input
-          placeholder="Command to run"
+          placeholder="Command"
           value={taskCommand}
           onChange={(e) => setTaskCommand(e.target.value)}
         />
 
-        <Button type="submit" className="w-full" disabled={addTask.isPending}>
+        <Button
+          className="w-full"
+          onClick={() => handleAddTask(mode === "new")}
+          disabled={addTask.isPending}
+        >
           {addTask.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
               <Plus className="h-4 w-4 mr-2" />
-              Add Step
+              Add
             </>
           )}
         </Button>
-      </form>
+      </Card>
+    )}
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or</span>
-        </div>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          variant={newFlow ? "link" : "secondary"}
-          className="flex-1"
-          onClick={() => {
-            setNewflow(true);
-            setLastTaskId(null);
-            setTaskFolder("");
-          }}
-        >
-          <ListTodo className="h-4 w-4 mr-2" />
-          New Workflow
-        </Button>
-
-        <Button variant="secondary" className="flex-1" onClick={onLink}>
-          <Link className="h-4 w-4 mr-2" />
-          Link Workflow
-        </Button>
-      </div>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">or</span>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".yaml,.yml,application/x-yaml,text/yaml"
-          onChange={handleFileChange}
-          className="hidden"
+    {mode === "link" && (
+      <Card className="absolute bottom-full mb-4 w-96 shadow-xl">
+        <DependencyForm
+          tasks={tasks}
+          dependencies={dependencies}
+          onBack={() => setMode("none")}
         />
+      </Card>
+    )}
 
-        <Button
-          variant="secondary"
-          className="flex-1"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Link className="h-4 w-4 mr-2" />
-          Upload YAML
-        </Button>
-      </div>
-    </Card>
+    {/* Buttons */}
+    <div className="flex gap-2">
+      <Button onClick={() => setMode("add")}>
+        <Plus className="h-4 w-4 mr-2" />
+        Add Step
+      </Button>
+
+      <Button
+        onClick={() => {
+          setLastTaskId(null);
+          setMode("new");
+          setNewflow(true);
+        }}
+        variant={newFlow ? "link" : "secondary"}
+      >
+        <ListTodo className="h-4 w-4 mr-2" />
+        New Workflow
+      </Button>
+
+      <Button variant="outline" onClick={() => setMode("link")}>
+        <Link className="h-4 w-4 mr-2" />
+        Link Workflow
+      </Button>
+    </div>
+
+  </div>
+</div>
+
   );
 }

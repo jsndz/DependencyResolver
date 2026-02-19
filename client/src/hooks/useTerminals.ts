@@ -9,7 +9,7 @@ export function useTerminals() {
   useEffect(() => {
     console.log("sub");
     if (esRef.current) return;
-    const eventSource = new EventSource("http://localhost:3000/api/execute");
+    const eventSource = new EventSource("http://localhost:5601/api/execute");
 
     eventSource.onmessage = (event) => {
       console.log("New data:", event.data);

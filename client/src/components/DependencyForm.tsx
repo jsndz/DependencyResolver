@@ -104,7 +104,7 @@ export default function DependencyForm({
         <Separator />
 
         {/* List */}
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <div className="text-sm font-medium text-muted-foreground">
             Current Links ({dependencies.length})
           </div>
@@ -128,7 +128,7 @@ export default function DependencyForm({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

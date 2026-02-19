@@ -4,9 +4,12 @@ import ReactFlow, {
     MarkerType,
     type Node,
     type Edge,
+    NodeChange,
+    applyNodeChanges,
   } from "reactflow";
   import "reactflow/dist/style.css";
 import { Dependency, Task } from "../types";
+import { useCallback, useEffect, useState } from "react";
 export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
     const nodes: Node[] = tasks.map((task, index) => ({
       id: task.id,
@@ -50,30 +53,50 @@ export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
   
     return { nodes, edges };
   }
-  export  function DependencyGraph({
-    apiData,
-  }: {
-    apiData: { tasks: Task[]; dependencies: Dependency[] };
-  }) {
+
+
+export function DependencyGraph({
+  apiData,
+}: {
+  apiData: { tasks: Task[]; dependencies: Dependency[] };
+}) {
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
+  useEffect(() => {
     const { nodes, edges } = toReactFlowGraph(
       apiData.tasks,
       apiData.dependencies
     );
-  
-    return (
-      <div className="w-full h-full rounded-xl border border-slate-200 bg-black">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          fitView
-          nodesConnectable={false}
-          nodesDraggable={true}
-          panOnScroll
-          zoomOnScroll
-        >
-          <Background gap={18} size={1} />
-          <Controls />
-        </ReactFlow>
-      </div>
-    );
-  }
+
+    setNodes(nodes);
+    setEdges(edges);
+  }, [apiData]);
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) =>
+      setNodes((nds) => applyNodeChanges(changes, nds)),
+    []
+  );
+
+return (
+  <div style={{ width: "100%", height: "100%" }}>
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      fitView
+      nodesConnectable={false}
+      nodesDraggable
+      panOnScroll
+      zoomOnScroll
+    >
+      <Background />
+      <Controls />
+    </ReactFlow>
+  </div>
+);
+
+
+
+}
