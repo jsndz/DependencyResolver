@@ -9,8 +9,13 @@ import {
   terminalNodes,
   unreachableNodes,
 } from "../services/graph.js";
-import { execute } from "../services/execution.js";
-import { yamlToDag, dagToWorkflow, dagToYaml, WorkFlowToDAG } from "../services/parser.js";
+import { execute, stopExecution } from "../services/execution.js";
+import {
+  yamlToDag,
+  dagToWorkflow,
+  dagToYaml,
+  WorkFlowToDAG,
+} from "../services/parser.js";
 
 const router = Router();
 
@@ -49,8 +54,6 @@ router.post("/dependency", (req, res) => {
   dependencies.push(req.body);
   const t = tasks.find((t) => t.id === req.body.to);
   t?.dependency.push(req.body.from);
-
-
   res.json({ ok: true });
 });
 
@@ -87,18 +90,20 @@ router.get("/unreachable", (req, res) => {
   res.json(indices.map((i) => tasks[i]!.task));
 });
 
-router.get("/execute",async (req, res) => {
+router.get("/execute", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
-  res.flushHeaders?.(); 
-  
+  res.flushHeaders?.();
+  req.on("close", () => {
+    stopExecution();
+  });
   const result = await execute(res);
   res.write(
     `data: ${JSON.stringify({
       type: "execution_finished",
       result,
-    })}\n\n`
+    })}\n\n`,
   );
 
   res.end();
@@ -109,19 +114,20 @@ router.post("/yaml", (req, res) => {
   if (typeof yaml !== "string") {
     return res.status(400).json({ error: "Missing yaml in body" });
   }
-console.log("hello");
+  console.log("hello");
 
   try {
     const dag = yamlToDag(yaml);
-    const { tasks: newTasks, dependencies: newDeps } = dagToWorkflow(dag as any);
+    const { tasks: newTasks, dependencies: newDeps } = dagToWorkflow(
+      dag as any,
+    );
 
     tasks.length = 0;
     dependencies.length = 0;
 
     for (const t of newTasks) tasks.push(t as any);
     for (const d of newDeps) dependencies.push(d as any);
-console.log(tasks,dependencies);
-
+    console.log(tasks, dependencies);
 
     res.json({ ok: true });
   } catch (err: any) {
@@ -130,20 +136,38 @@ console.log(tasks,dependencies);
   }
 });
 
-router.get("/yaml/:workflow",(req,res)=>{
+router.get("/yaml/:workflow", (req, res) => {
   try {
-    const dag = WorkFlowToDAG(tasks,dependencies,req.params.workflow,1);
-    const yaml = dagToYaml(dag)
-        res.setHeader("Content-Type", "application/x-yaml");
+    const dag = WorkFlowToDAG(tasks, dependencies, req.params.workflow, 1);
+    const yaml = dagToYaml(dag);
+    res.setHeader("Content-Type", "application/x-yaml");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${req.params.workflow}.yaml"`
+      `attachment; filename="${req.params.workflow}.yaml"`,
     );
 
     res.send(yaml);
   } catch (err) {
     res.status(400).json({ error: String(err) });
   }
-})
+});
+
+router.get("/execution/stop", async (req, res) => {
+  try {
+    const r = await stopExecution();
+    if (r) {
+      res.json({ ok: true });
+    }
+  } catch (err) {
+    res.status(400).json({ error: String(err) });
+  }
+});
+
+router.get("/task/:id/stop", (req, res) => {
+  try {
+  } catch (err) {
+    res.status(400).json({ error: String(err) });
+  }
+});
 
 export default router;

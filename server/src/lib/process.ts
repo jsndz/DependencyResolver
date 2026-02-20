@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import type { Response } from "express";
 import type { Readable } from "stream";
-import { terminal, type Task } from "../store";
+import { runningProcesses, terminal, type Task } from "../store";
 
 function selectTerminalId(task: Task): string {
   function createTerminalId() {
@@ -75,9 +75,10 @@ export function runCommand(task: Task, res: Response): Promise<void> {
     const child = spawn(cmd!, parts.slice(1), {
       cwd: folder,
       shell: true,
+      detached: true,
       stdio: "pipe",
-    }) as { stdout: Readable; stderr: Readable };
-
+    });
+    runningProcesses.set(task.id, child);
     child.stdout.on("data", (d) => {
       console.log(d);
 
@@ -110,7 +111,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
         entry.taken = false;
       }
       const ok = code === 0 || code === null;
-
+      runningProcesses.delete(task.id);
       res.write(
         `data: ${JSON.stringify({
           type: "task_finished",

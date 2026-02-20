@@ -1,5 +1,11 @@
 import { parallelExecution, resolveDependencies } from "./graph.js";
-import { tasks, dependencies, stats, type Task } from "../store/index.js";
+import {
+  tasks,
+  dependencies,
+  stats,
+  type Task,
+  runningProcesses,
+} from "../store/index.js";
 import { runCommand } from "../lib/process.ts";
 import type { Response } from "express";
 
@@ -39,11 +45,32 @@ export async function execute(res: Response) {
     });
   }
 
-
   return {
     ok: true,
     order,
-    levels: parallels.levels.map(level => level.map(t => t.id)),
+    levels: parallels.levels.map((level) => level.map((t) => t.id)),
     stats: Object.fromEntries(stats),
   };
 }
+
+
+
+export const stopExecution = () => {
+  for (const [, child] of runningProcesses) {
+    if (!child.pid) continue;
+    try {
+      process.kill(-child.pid, "SIGTERM");
+    } catch {
+      continue;
+    }
+    setTimeout(() => {
+      try {
+        process.kill(-child.pid!, 0);
+        process.kill(-child.pid!, "SIGKILL");
+      } catch {
+      }
+    }, 3000);
+  }
+  runningProcesses.clear();
+  return true;
+};

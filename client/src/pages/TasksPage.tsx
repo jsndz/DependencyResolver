@@ -1,16 +1,11 @@
-import TaskManager from "../components/TaskManager";
 import { useTasks } from "../hooks/useTasks";
 import { DependencyGraph } from "../components/GraphUI";
 
-import { useState } from "react";
-import DependencyForm from "../components/DependencyForm";
 import UploadYaml from "../components/UploadYaml";
 import { Button } from "../components/ui/button";
-import { NavItems } from "../components/ui/resizable-navbar";
 import { NavLink } from "react-router-dom";
 import { Play } from "lucide-react";
 import WorkflowControls from "../components/TaskManager";
-import { Card } from "../components/ui/card";
 
 export default function TasksPage() {
   const { data } = useTasks();

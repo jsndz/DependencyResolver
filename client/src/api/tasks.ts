@@ -6,15 +6,15 @@ export const fetchTasks = async (): Promise<{
   dependencies: Dependency[];
 }> => {
   const { data } = await api.get("/tasks");
-  console.log("task and dep \n",data);
+  console.log("task and dep \n", data);
 
   return data;
 };
 
 export const addTask = async (task: TaskRequest) => {
   const { data } = await api.post("/task", task);
-  console.log("added task\n",data);
-  
+  console.log("added task\n", data);
+
   return data;
 };
 
@@ -41,6 +41,12 @@ export const execute = async () => {
   return data;
 };
 
+export const stopExecution = async () => {
+  const { data } = await api.get("/execution/stop");
+
+  return data;
+};
+
 export const uploadYaml = async (file: File) => {
   const text = await file.text();
   const { data } = await api.post("/yaml", { yaml: text });
@@ -56,7 +62,9 @@ export const downloadYaml = async (workflowName: string) => {
 
   const blob = new Blob([resp.data], { type: "application/x-yaml" });
 
-  const disposition = resp.headers?.["content-disposition"] || resp.headers?.["Content-Disposition"];
+  const disposition =
+    resp.headers?.["content-disposition"] ||
+    resp.headers?.["Content-Disposition"];
   let filename = `${workflowName}.yaml`;
   if (disposition) {
     const match = /filename="?([^";]+)"?/.exec(disposition);

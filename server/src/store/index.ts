@@ -1,3 +1,5 @@
+import type { ChildProcess } from "child_process";
+
 export type Task = {
   id: string;
   task: string;
@@ -13,3 +15,4 @@ export const terminal: Map<string, { terminalId: string; taken: boolean }> = new
 
 export const tasks: Task[] = [];
 export const dependencies: Dependency[] = [];
+export const runningProcesses = new Map<string, ChildProcess>();
