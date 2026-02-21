@@ -219,6 +219,14 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
+## Todo
+
+- Task Crud
+- READ AND WRITE terminal
+- Close Individual terminals
+
+
+---
 ## 📜 License
 
 Private / unlicensed unless stated otherwise.
