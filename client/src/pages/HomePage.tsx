@@ -1,3 +1,4 @@
+import FeaturesSectionDemo from "../components/features";
 import { Footer } from "../components/home/Footer";
 import { Hero } from "../components/home/Hero";
 import { HomeNav } from "../components/home/HomeNav";
@@ -10,6 +11,7 @@ export default function HomePage() {
       <HomeNav></HomeNav>
       <Hero></Hero>
       <UserFlow></UserFlow>
+      <FeaturesSectionDemo></FeaturesSectionDemo>
       <Footer></Footer>
        
     </div>
