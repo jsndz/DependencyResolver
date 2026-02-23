@@ -97,3 +97,10 @@ Phase 10: Killing the children (process)
 Date: Feb 20,2026
 
 endpoints for killing the all running process
+
+
+Phase 11: Home Page UI
+Date: Feb 22,2026
+
+After going through lot of design and ideas for the home page settled for something simple.
+Added How it Works and Features page

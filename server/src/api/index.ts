@@ -9,7 +9,7 @@ import {
   terminalNodes,
   unreachableNodes,
 } from "../services/graph.js";
-import { execute, stopExecution } from "../services/execution.js";
+import { execute, stopExecution, stopProcess } from "../services/execution.js";
 import {
   yamlToDag,
   dagToWorkflow,
@@ -35,6 +35,21 @@ router.post("/task", (req, res) => {
   res.json(t);
 });
 
+router.put("/task/:id", (req, res) => {
+  const id = req.params.id;
+  const task = tasks.find((t) => t.id === id);
+
+  if (!task) {
+    return res.status(404).json({ error: "Task not found" });
+  }
+
+  if (req.body.task) task.task = req.body.task;
+  if (req.body.folder) task.folder = req.body.folder;
+  if (req.body.command) task.command = req.body.command;
+
+  res.json(task);
+});
+
 router.delete("/task/:id", (req, res) => {
   const id = req.params.id;
 
@@ -54,6 +69,31 @@ router.post("/dependency", (req, res) => {
   dependencies.push(req.body);
   const t = tasks.find((t) => t.id === req.body.to);
   t?.dependency.push(req.body.from);
+  res.json({ ok: true });
+});
+
+router.delete("/dependency", (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    return res.status(400).json({ error: "Missing from or to" });
+  }
+
+  const idx = dependencies.findIndex((d) => d.from === from && d.to === to);
+  if (idx === -1) {
+    return res.status(404).json({ error: "Dependency not found" });
+  }
+
+  dependencies.splice(idx, 1);
+
+  const task = tasks.find((t) => t.id === to);
+  if (task) {
+    const depIdx = task.dependency.indexOf(from);
+    if (depIdx !== -1) {
+      task.dependency.splice(depIdx, 1);
+    }
+  }
+
   res.json({ ok: true });
 });
 
@@ -165,6 +205,9 @@ router.get("/execution/stop", async (req, res) => {
 
 router.get("/task/:id/stop", (req, res) => {
   try {
+    const id = req.params.id;
+    const r = stopProcess(id);
+    res.json({ ok: r });
   } catch (err) {
     res.status(400).json({ error: String(err) });
   }

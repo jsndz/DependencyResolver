@@ -8,7 +8,7 @@ import { Play } from "lucide-react";
 import WorkflowControls from "../components/TaskManager";
 
 export default function TasksPage() {
-  const { data } = useTasks();
+  const { data,refetch } = useTasks();
   const tasks = data?.tasks ?? [];
   const dependencies = data?.dependencies ?? [];
 
@@ -25,7 +25,7 @@ export default function TasksPage() {
         </a>
       </div>
       <div className="absolute z-20  top-0 right-0 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black">
-        <UploadYaml></UploadYaml>
+        <UploadYaml onSuccess={refetch}></UploadYaml>
         <Button>
           {" "}
           <NavLink to="/analysis">Analysis</NavLink>

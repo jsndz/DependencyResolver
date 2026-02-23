@@ -53,8 +53,6 @@ export async function execute(res: Response) {
   };
 }
 
-
-
 export const stopExecution = () => {
   for (const [, child] of runningProcesses) {
     if (!child.pid) continue;
@@ -67,10 +65,28 @@ export const stopExecution = () => {
       try {
         process.kill(-child.pid!, 0);
         process.kill(-child.pid!, "SIGKILL");
-      } catch {
-      }
+      } catch {}
     }, 3000);
   }
   runningProcesses.clear();
+  return true;
+};
+
+export const stopProcess = (id: string) => {
+  const child = runningProcesses.get(id);
+
+  if (!child || !child.pid) return false;
+  try {
+    process.kill(-child.pid, "SIGTERM");
+    // signal to the entire process group
+  } catch {
+    return false;
+  }
+  setTimeout(() => {
+    try {
+      process.kill(-child.pid!, 0);
+      process.kill(-child.pid!, "SIGKILL");
+    } catch {}
+  }, 3000);
   return true;
 };

@@ -20,8 +20,16 @@ export const addTask = async (task: TaskRequest) => {
 
 export const deleteTask = (id: string) => api.delete(`/task/${id}`);
 
+export const updateTask = (
+  id: string,
+  updates: Partial<{ task: string; folder: string; command: string }>,
+) => api.put(`/task/${id}`, updates);
+
 export const addDependency = (from: string, to: string) =>
   api.post("/dependency", { from, to });
+
+export const deleteDependency = (from: string, to: string) =>
+  api.delete("/dependency", { data: { from, to } });
 
 export const analyze = async (
   type: string,
@@ -47,9 +55,17 @@ export const stopExecution = async () => {
   return data;
 };
 
+export const stopProcess = async (id:string) => {
+  const { data } = await api.get(`/task/${id}/stop`);
+
+  return data;
+};
+
 export const uploadYaml = async (file: File) => {
   const text = await file.text();
   const { data } = await api.post("/yaml", { yaml: text });
+  console.log(data);
+  
   return data;
 };
 
