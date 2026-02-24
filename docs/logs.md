@@ -99,8 +99,35 @@ Date: Feb 20,2026
 endpoints for killing the all running process
 
 
-Phase 11: Home Page UI
+Phase 11: Home Page UI And Task Crud
 Date: Feb 22,2026
 
 After going through lot of design and ideas for the home page settled for something simple.
-Added How it Works and Features page
+Added How it Works and Features page.
+Added Delete and update for tasks and dependency.
+
+
+Phase 12: Limitations
+Date: Feb 24,2026
+
+After manually testing some bigger microservices to run in development, there are some limitation of the current Execution model
+In the current Execution model dependency is based on the Nodes.
+Example: A -> B  : meaning B will run after A
+But the thing about this is that there can be many states for A.
+Like if A is a service, in the current Execution model if A is finished executing then only B will execute
+But for a server if lets say A is backend and need to perform integration test of A.
+We need to run the server and then perform integration server. In current Execution model it is not possible.
+So we need to change the dependency based on nodes to dependency based on state.
+State can be running, stopped, Dead etc. 
+If we add dependency based on state we can do,
+run B when A is (running).
+
+The current architecture is client-server architecture.
+Even though everything is running natively on the same system,
+Backend server is running and browser acting as a client.
+This can be rather counter-intuitive for a workflow/developer tool.
+And also browser has limited permissions to work with system.
+
+The Terminals are only read. No write operations are allowed for now.
+This is not a limitation in the sense that you want to execute a workflow. 
+But can be problematic if you want to run some cli or use terminal to send data.
