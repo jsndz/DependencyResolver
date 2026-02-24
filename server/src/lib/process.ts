@@ -1,6 +1,6 @@
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import type { Response } from "express";
-import type { Readable } from "stream";
+import net from "net";
 import { runningProcesses, terminal, type Task } from "../store";
 
 function selectTerminalId(task: Task): string {
@@ -82,7 +82,7 @@ export function runCommand(task: Task, res: Response): Promise<void> {
     runningProcesses.set(task.id, child);
     child.stdout.on("data", (d) => {
       console.log(d);
-    
+
       res.write(
         `data: ${JSON.stringify({
           type: "task_stdout",
@@ -126,4 +126,54 @@ export function runCommand(task: Task, res: Response): Promise<void> {
 
     (child as any).on("error", reject);
   });
+}
+
+async function readynessCheck(task: Task, child: ChildProcess): Promise<void> {
+  if (task.ready?.kind === "exit") {
+    return ;
+  } else if (task.ready?.kind === "port") {
+    return await checkPort(task.ready.port);
+  } else if (task.ready?.kind === "log") {
+    await checkLogs();
+  }
+}
+function checkPort(
+  port: number,
+  ip = "192.0.0.1",
+  timeout = 30_000,
+): Promise<void> {
+  const startTime = Date.now();
+  return new Promise<void>((res, rej) => {
+    const connect = () => {
+      const socket = new net.Socket();
+
+      socket.on("connect", () => {
+        socket.destroy();
+        res();
+      });
+      socket.on("error", () => {
+        socket.destroy();
+        retry();
+      });
+      socket.on("timeout", () => {
+        socket.destroy();
+        retry();
+      });
+      socket.connect(port, ip);
+    };
+
+    const retry = () => {
+      if (Date.now() - startTime > timeout) {
+        rej(new Error("timeout"));
+      } else {
+        setTimeout(connect, 200);
+      }
+    };
+    connect();
+  });
+}
+
+
+function checkLogs() {
+  
 }

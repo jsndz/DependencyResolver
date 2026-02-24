@@ -12,7 +12,7 @@ type StepState =
 type ReadyWhen =
   | { kind: "exit" }
   | { kind: "port"; port: number }
-  | { kind: "log"; match: string };
+  | { kind: "log"; match: string | RegExp };
 
 export type Task = {
   id: string;
