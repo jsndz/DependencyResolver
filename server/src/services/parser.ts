@@ -61,7 +61,7 @@ export function dagToWorkflow(dag: Dag) {
       task: id,              
       folder: t.folder,
       command: t.command,
-      dependency: []      
+      dependency: [],
     });
   }
 

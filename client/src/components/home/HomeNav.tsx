@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import {
   Navbar,
   NavBody,
@@ -13,8 +14,8 @@ import { useState } from "react";
 
 export function HomeNav() {
   const navItems = [
+    { name: "Working", link: "#working" },
     { name: "Features", link: "#features" },
-    { name: "Pricing", link: "#pricing" },
     { name: "Contact", link: "#contact" },
   ];
 
@@ -27,7 +28,9 @@ export function HomeNav() {
         <NavbarLogo />
         <NavItems items={navItems} />
         <div className="flex items-center gap-3">
-          <NavbarButton variant="primary">Book a call</NavbarButton>
+          <NavLink to={"/tasks"}>
+          <NavbarButton variant="primary">Get Started</NavbarButton>
+          </NavLink>
         </div>
       </NavBody>
 

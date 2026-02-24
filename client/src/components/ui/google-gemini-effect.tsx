@@ -47,8 +47,8 @@ export const GoogleGeminiEffect = ({
         <NavLink to={"/tasks"} className="font-bold bg-white rounded-full h-10 w-40 md:px-4 md:py-2 px-2 py-1 md:mt-24 mt-8 z-30 md:text-base text-black text-xs mx-auto">
           <div  className="relative h-20 overflow-hidden">
             <motion.span className="absolute inset-0" style={{ opacity: createOpacity, color:"blue" }}>Create</motion.span>
-            <motion.span className="absolute inset-0"  style={{ opacity: buildOpacity }}>Build</motion.span>
-            <motion.span className="absolute inset-0"  style={{ opacity: runOpacity }}>Run</motion.span>
+            <motion.span className="absolute inset-0"  style={{ opacity: buildOpacity }}>Connect</motion.span>
+            <motion.span className="absolute inset-0"  style={{ opacity: runOpacity }}>Analyse</motion.span>
             <motion.span className="absolute inset-0"  style={{ opacity: execOpacity }}>Execute</motion.span>
           </div>
         </NavLink>

@@ -30,6 +30,9 @@ router.post("/task", (req, res) => {
     folder: req.body.folder,
     command: req.body.command,
     dependency: [],
+    type: req.body.type,
+    state:"idle",
+    ready: req.body.type === "service" ? req.body.ready : { kind: "exit" },
   };
   tasks.push(t);
   res.json(t);
@@ -46,6 +49,8 @@ router.put("/task/:id", (req, res) => {
   if (req.body.task) task.task = req.body.task;
   if (req.body.folder) task.folder = req.body.folder;
   if (req.body.command) task.command = req.body.command;
+  if (req.body.type) task.type = req.body.type;
+  if (req.body.ready) task.ready = req.body.ready;
 
   res.json(task);
 });

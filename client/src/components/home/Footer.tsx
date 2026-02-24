@@ -6,7 +6,7 @@ export function Footer() {
       { label: "All Products", href: "#" },
       { label: "Studio", href: "#" },
       { label: "Clients", href: "#" },
-      { label: "Pricing", href: "#" },
+
       { label: "Blog", href: "#" },
     ],
     socials: [

@@ -78,10 +78,11 @@ export function runCommand(task: Task, res: Response): Promise<void> {
       detached: true,
       stdio: "pipe",
     });
+    task.state = "starting";
     runningProcesses.set(task.id, child);
     child.stdout.on("data", (d) => {
       console.log(d);
-
+    
       res.write(
         `data: ${JSON.stringify({
           type: "task_stdout",
@@ -94,7 +95,6 @@ export function runCommand(task: Task, res: Response): Promise<void> {
 
     child.stderr.on("data", (d) => {
       console.log(d);
-
       res.write(
         `data: ${JSON.stringify({
           type: "task_stderr",

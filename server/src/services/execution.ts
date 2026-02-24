@@ -2,7 +2,7 @@ import { parallelExecution, resolveDependencies } from "./graph.js";
 import {
   tasks,
   dependencies,
-  stats,
+  taskState,
   type Task,
   runningProcesses,
 } from "../store/index.js";
@@ -10,7 +10,7 @@ import { runCommand } from "../lib/process.ts";
 import type { Response } from "express";
 
 function canRun(task: Task): boolean {
-  return task.dependency.every((dep) => stats.get(dep) === "success");
+  return task.dependency.every((dep) => taskState.get(dep) === "success");
 }
 
 export async function execute(res: Response) {
@@ -38,9 +38,11 @@ export async function execute(res: Response) {
     results.forEach((result, index) => {
       const task = runnable[index];
       if (result.status === "fulfilled") {
-        stats.set(task?.id!, "success");
+        taskState.set(task?.id!, "success");
+        task!.state = "completed"
       } else if (result.status === "rejected") {
-        stats.set(task?.id!, "failed");
+        taskState.set(task?.id!, "failed");
+        task!.state = "failed"
       }
     });
   }
@@ -49,7 +51,7 @@ export async function execute(res: Response) {
     ok: true,
     order,
     levels: parallels.levels.map((level) => level.map((t) => t.id)),
-    stats: Object.fromEntries(stats),
+    stats: Object.fromEntries(taskState),
   };
 }
 
