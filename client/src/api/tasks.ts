@@ -51,7 +51,8 @@ export const execute = async () => {
 
 export const stopExecution = async () => {
   const { data } = await api.get("/execution/stop");
-
+    console.log("stop execution called from api");
+    
   return data;
 };
 

@@ -3,11 +3,11 @@ import type { ChildProcess } from "child_process";
 type StepState =
   | "idle"
   | "starting"
-  | "ready"
-  | "running"
-  | "completed"
+  | "ready"// service is ready
+  | "running" 
+  | "completed" // job completed
   | "failed"
-  | "stopped";
+  | "stopped"; //manually stop
 
 type ReadyWhen =
   | { kind: "exit" }
@@ -25,9 +25,7 @@ export type Task = {
   ready?: ReadyWhen;
 };
 export type Dependency = { from: string; to: string };
-export type TaskStatus = "success" | "failed" | "pending" | "skipped";
 
-export const taskState: Map<string, TaskStatus> = new Map<string, TaskStatus>();
 export const terminal: Map<string, { terminalId: string; taken: boolean }> =
   new Map<string, { terminalId: string; taken: boolean }>();
 

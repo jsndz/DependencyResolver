@@ -13,31 +13,52 @@ export function useTerminals() {
   const terminalMap = useRef<Record<string, XTerm>>({});
 
   useEffect(() => {
-    if (esRef.current) return;
+    if (esRef.current) {
+      return;
+    }
 
-    const eventSource = new EventSource("http://localhost:5601/api/execute");
+    const eventSource = new EventSource(
+      "http://localhost:5601/api/execute",
+    );
+
     esRef.current = eventSource;
 
+    eventSource.onopen = () => {};
+
     eventSource.onmessage = (event) => {
-      const msg: Events = JSON.parse(event.data);
+      try {
+        const msg: Events = JSON.parse(event.data);
 
-      dispatch(msg);
-      const term = terminalMap.current[msg.terminalId];
-      if (!term) return;
+        dispatch(msg);
 
-      switch (msg.type) {
-        case "task_stdout":
-        case "task_stderr":
-          term.write(msg.data);
-          break;
+        const term = terminalMap.current[msg.terminalId];
 
-        case "task_started":
-          term.write(`\r\n$ ${msg.command}\r\n`);
-          break;
+        if (!term) {
+          return;
+        }
+
+        switch (msg.type) {
+          case "task_stdout":
+            term.write(msg.data);
+            break;
+
+          case "task_stderr":
+            term.write(msg.data);
+            break;
+
+          case "task_started":
+            term.write(`\r\n$ ${msg.command}\r\n`);
+            break;
+
+          default:
+            break;
+        }
+      } catch (err) {
+        // Ignore parse errors
       }
     };
 
-    eventSource.onerror = () => {
+    eventSource.onerror = (err) => {
       eventSource.close();
       esRef.current = null;
     };
@@ -50,6 +71,7 @@ export function useTerminals() {
 
   return {
     state,
+
     registerTerminal: (id: string, term: XTerm) => {
       terminalMap.current[id] = term;
     },

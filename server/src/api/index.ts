@@ -141,6 +141,8 @@ router.get("/execute", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders?.();
   req.on("close", () => {
+    console.log("wanted to close connection by /eexcute");
+    
     stopExecution();
   });
   const result = await execute(res);
@@ -200,6 +202,8 @@ router.get("/yaml/:workflow", (req, res) => {
 router.get("/execution/stop", async (req, res) => {
   try {
     const r = await stopExecution();
+        console.log("wanted to close connection by /execution/stop");
+
     if (r) {
       res.json({ ok: true });
     }
