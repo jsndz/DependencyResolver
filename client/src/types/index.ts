@@ -1,16 +1,34 @@
-export interface Task {
+export interface Task  {
   id: string;
   task: string;
-  folder: string;
   command: string;
-}
+  folder: string;
+  dependency: string[];
+  type: "job" | "service";
+  state: StepState;
+  ready?: ReadyWhen;
+};
+type StepState =
+  | "idle"
+  | "starting"
+  | "ready"// service is ready
+  | "running" 
+  | "completed" // job completed
+  | "failed"
+  | "stopped"; //manually stop
 
-export interface TaskRequest {
+type ReadyWhen =
+  | { kind: "exit" }
+  | { kind: "port"; port: number }
+  | { kind: "log"; match: string | RegExp };
+
+export type TaskRequest = {
   task: string;
   folder: string;
   command: string;
-}
-
+  type: "job" | "service";
+  ready?: ReadyWhen;
+};
 export interface Dependency {
   from: string;
   to: string;

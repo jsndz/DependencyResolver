@@ -30,6 +30,11 @@ import {
 } from "./ui/card";
 import { Button } from "./ui/button";
 
+type ReadyWhen =
+  | { kind: "exit" }
+  | { kind: "port"; port: number }
+  | { kind: "log"; match: string };
+
 export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
   const nodes: Node[] = tasks.map((task, index) => ({
     id: task.id,
@@ -39,6 +44,13 @@ export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
         <div className="text-left">
           <div className="font-semibold text-slate-800">{task.task}</div>
           <div className="text-xs text-slate-500">{task.folder}</div>
+
+          {task.type === "service" && (
+            <div className="text-[10px] mt-1 px-2 py-0.5 inline-block bg-blue-100 text-blue-600 rounded">
+              service
+            </div>
+          )}
+
           {task.command && (
             <div className="text-xs text-slate-400 mt-1 truncate">
               {task.command}
@@ -49,14 +61,14 @@ export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
     },
     position: {
       x: 100,
-      y: index * 120,
+      y: index * 130,
     },
     style: {
       border: "2px solid #2563eb",
       borderRadius: "10px",
       background: "#ffffff",
       padding: "10px",
-      width: 220,
+      width: 240,
       boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
     },
   }));
@@ -88,9 +100,15 @@ export function DependencyGraph({
   const [edges, setEdges] = useState<Edge[]>([]);
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
   const [taskName, setTaskName] = useState("");
   const [folderName, setFolderName] = useState("");
   const [command, setCommand] = useState("");
+
+  const [taskType, setTaskType] = useState<"job" | "service">("job");
+  const [readyKind, setReadyKind] = useState<"exit" | "port" | "log">("exit");
+  const [readyPort, setReadyPort] = useState<number>(3000);
+  const [readyLogMatch, setReadyLogMatch] = useState("");
 
   const deleteTaskMutation = useDeleteTask();
   const deleteDependencyMutation = useDeleteDependency();
@@ -102,7 +120,6 @@ export function DependencyGraph({
       apiData.tasks,
       apiData.dependencies
     );
-
     setNodes(nodes);
     setEdges(edges);
   }, [apiData.tasks, apiData.dependencies]);
@@ -161,6 +178,21 @@ export function DependencyGraph({
       setTaskName(task.task);
       setFolderName(task.folder);
       setCommand(task.command ?? "");
+      setTaskType(task.type);
+
+      if (task.ready) {
+        setReadyKind(task.ready.kind);
+
+        if (task.ready.kind === "port") {
+          setReadyPort(task.ready.port);
+        }
+
+        if (task.ready.kind === "log") {
+          setReadyLogMatch(String(task.ready.match));
+        }
+      } else {
+        setReadyKind("exit");
+      }
     },
     [apiData.tasks]
   );
@@ -168,12 +200,30 @@ export function DependencyGraph({
   const handleUpdateTask = () => {
     if (!editingTask) return;
 
+    let ready: ReadyWhen | undefined = undefined;
+
+    if (taskType === "service") {
+      if (readyKind === "exit") {
+        ready = { kind: "exit" };
+      }
+
+      if (readyKind === "port") {
+        ready = { kind: "port", port: readyPort };
+      }
+
+      if (readyKind === "log") {
+        ready = { kind: "log", match: readyLogMatch };
+      }
+    }
+
     updateTaskMutation.mutate({
       id: editingTask.id,
       updates: {
         task: taskName,
         folder: folderName,
-        command: command,
+        command,
+        type: taskType,
+        ready,
       },
     });
 
@@ -205,14 +255,13 @@ export function DependencyGraph({
         </ReactFlow>
       </div>
 
-      {/* Edit Modal */}
       {editingTask && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <Card className="w-[420px] shadow-2xl">
+          <Card className="w-[450px] shadow-2xl">
             <CardHeader>
               <CardTitle>Edit Task</CardTitle>
               <CardDescription>
-                Update task details and command
+                Update task configuration
               </CardDescription>
             </CardHeader>
 
@@ -235,9 +284,72 @@ export function DependencyGraph({
                 className="w-full border p-2 rounded resize-none"
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
-                placeholder="Command (e.g. npm run build)"
+                placeholder="Command"
                 rows={3}
               />
+
+              {/* Type */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Task Type
+                </label>
+                <select
+                  className="w-full border p-2 rounded"
+                  value={taskType}
+                  onChange={(e) =>
+                    setTaskType(e.target.value as "job" | "service")
+                  }
+                >
+                  <option value="job">Job</option>
+                  <option value="service">Service</option>
+                </select>
+              </div>
+
+              {/* Ready Section */}
+              {taskType === "service" && (
+                <div className="space-y-3 border rounded p-3 ">
+                  <label className="block text-sm font-medium">
+                    Ready When
+                  </label>
+
+                  <select
+                    className="w-full border p-2 rounded"
+                    value={readyKind}
+                    onChange={(e) =>
+                      setReadyKind(
+                        e.target.value as "exit" | "port" | "log"
+                      )
+                    }
+                  >
+                    <option value="exit">Process exits</option>
+                    <option value="port">Port is open</option>
+                    <option value="log">Log contains text</option>
+                  </select>
+
+                  {readyKind === "port" && (
+                    <input
+                      type="number"
+                      className="w-full border p-2 rounded"
+                      value={readyPort}
+                      onChange={(e) =>
+                        setReadyPort(Number(e.target.value))
+                      }
+                      placeholder="Port number"
+                    />
+                  )}
+
+                  {readyKind === "log" && (
+                    <input
+                      className="w-full border p-2 rounded"
+                      value={readyLogMatch}
+                      onChange={(e) =>
+                        setReadyLogMatch(e.target.value)
+                      }
+                      placeholder="Log match text"
+                    />
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button
@@ -251,7 +363,9 @@ export function DependencyGraph({
                   onClick={handleUpdateTask}
                   disabled={updateTaskMutation.isPending}
                 >
-                  {updateTaskMutation.isPending ? "Saving..." : "Save"}
+                  {updateTaskMutation.isPending
+                    ? "Saving..."
+                    : "Save"}
                 </Button>
               </div>
             </CardContent>

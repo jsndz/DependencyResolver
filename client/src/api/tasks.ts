@@ -1,6 +1,8 @@
 import { api } from "../config/api";
 import { Task, Dependency, TaskRequest } from "../types";
-
+type UpdateTaskPayload = Partial<
+  Pick<Task, "task" | "folder" | "command" | "type" | "ready">
+>;
 export const fetchTasks = async (): Promise<{
   tasks: Task[];
   dependencies: Dependency[];
@@ -20,10 +22,8 @@ export const addTask = async (task: TaskRequest) => {
 
 export const deleteTask = (id: string) => api.delete(`/task/${id}`);
 
-export const updateTask = (
-  id: string,
-  updates: Partial<{ task: string; folder: string; command: string }>,
-) => api.put(`/task/${id}`, updates);
+export const updateTask = (id: string, updates: UpdateTaskPayload) =>
+  api.put(`/task/${id}`, updates);
 
 export const addDependency = (from: string, to: string) =>
   api.post("/dependency", { from, to });
@@ -51,12 +51,12 @@ export const execute = async () => {
 
 export const stopExecution = async () => {
   const { data } = await api.get("/execution/stop");
-    console.log("stop execution called from api");
-    
+  console.log("stop execution called from api");
+
   return data;
 };
 
-export const stopProcess = async (id:string) => {
+export const stopProcess = async (id: string) => {
   const { data } = await api.get(`/task/${id}/stop`);
 
   return data;
@@ -66,7 +66,7 @@ export const uploadYaml = async (file: File) => {
   const text = await file.text();
   const { data } = await api.post("/yaml", { yaml: text });
   console.log(data);
-  
+
   return data;
 };
 

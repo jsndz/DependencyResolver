@@ -153,7 +153,7 @@ router.get("/execute", async (req, res) => {
     })}\n\n`,
   );
 
-  res.end();
+  // res.end();
 });
 
 router.post("/yaml", (req, res) => {

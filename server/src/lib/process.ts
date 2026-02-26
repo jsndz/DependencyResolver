@@ -42,10 +42,7 @@ function selectTerminalId(task: Task): string {
   return id;
 }
 
-export async function runCommand(
-  task: Task,
-  res: Response,
-): Promise<void> {
+export async function runCommand(task: Task, res: Response): Promise<void> {
   return new Promise(async (resolve, reject) => {
     const command = task.command;
     const folder = task.folder;
@@ -121,10 +118,16 @@ export async function runCommand(
           resolve();
         })
         .catch((err) => {
-          if (child.pid) {
-            process.kill(-child.pid, "SIGTERM");
+          try {
+            if (child.pid) {
+              process.kill(-child.pid, "SIGTERM");
+            }
+          } catch (err: any) {
+            if (err.code !== "ESRCH") {
+              throw err; 
+            }
+            
           }
-          reject(err);
         });
 
       return;
@@ -160,17 +163,12 @@ export async function runCommand(
     });
 
     child.on("error", (err) => {
-      reject(
-        new Error(`Failed to start process for task ${task.task}`),
-      );
+      reject(new Error(`Failed to start process for task ${task.task}`));
     });
   });
 }
 
-async function readinessCheck(
-  task: Task,
-  child: ChildProcess,
-): Promise<void> {
+async function readinessCheck(task: Task, child: ChildProcess): Promise<void> {
   if (task.state === "ready") return;
   if (!task.ready) return;
 
@@ -226,13 +224,7 @@ function waitForPort(
     };
 
     child.once("exit", () => {
-      finish(() =>
-        rej(
-          new Error(
-            "process exited before port was ready",
-          ),
-        ),
-      );
+      finish(() => rej(new Error("process exited before port was ready")));
     });
 
     const retry = () => {
@@ -263,9 +255,7 @@ function waitForLog(
       }
 
       const ok =
-        typeof match === "string"
-          ? buffer.includes(match)
-          : match.test(buffer);
+        typeof match === "string" ? buffer.includes(match) : match.test(buffer);
 
       if (ok) {
         cleanup();
@@ -275,9 +265,7 @@ function waitForLog(
 
     const onExit = () => {
       cleanup();
-      reject(
-        new Error("process exited before log matched"),
-      );
+      reject(new Error("process exited before log matched"));
     };
 
     const cleanup = () => {

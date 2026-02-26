@@ -74,7 +74,7 @@ export function addMockData() {
     { from: task6.id, to: task5.id },
   ];
 
-  for (const { from, to } of deps) {
+  for (const { from, to } of deps) { 
     const child = all.find(t => t.id === to)!;
     child.dependency.push(from);
   }

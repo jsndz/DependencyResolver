@@ -28,7 +28,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-b from-[#111] to-[#0b0b0b]">
+    <footer className="relative overflow-hidden bg-gradient-to-b from-[#3d3c3c] to-[#0b0b0b]">
       {/* Background decorative text */}
       <div className="absolute bottom-0 left-0 pointer-events-none opacity-5">
         <div className="text-[20rem] font-bold tracking-tighter leading-none text-white whitespace-nowrap">

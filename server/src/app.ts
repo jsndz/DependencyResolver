@@ -7,5 +7,5 @@ const app = express();
 app.use(cors({ origin: "http://localhost:6080" }));
 app.use(express.json());
 app.use("/api", routes);
-addMockData();
+// addMockData();
 export { app };
