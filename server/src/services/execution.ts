@@ -65,10 +65,10 @@ export async function execute(res: Response) {
 
       if (result.status === "rejected") {
         task!.state = "failed";
-        stopProcess(task?.id!);
       }
     });
   }
+console.log("execution completed");
 
   return {
     ok: true,

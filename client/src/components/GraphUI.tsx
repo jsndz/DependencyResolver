@@ -29,55 +29,76 @@ import {
   CardContent,
 } from "./ui/card";
 import { Button } from "./ui/button";
+import { analyze } from "../api/tasks";
 
 type ReadyWhen =
   | { kind: "exit" }
   | { kind: "port"; port: number }
   | { kind: "log"; match: string };
 
-export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
-  const nodes: Node[] = tasks.map((task, index) => ({
-    id: task.id,
-    type: "default",
-    data: {
-      label: (
-        <div className="text-left">
-          <div className="font-semibold text-slate-800">{task.task}</div>
-          <div className="text-xs text-slate-500">{task.folder}</div>
+export function toReactFlowGraphFromLevels(
+  levels: Task[][],
+  deps: Dependency[]
+) {
+  const horizontalSpacing = 400;
+  const verticalSpacing = 160;
 
-          {task.type === "service" && (
-            <div className="text-[10px] mt-1 px-2 py-0.5 inline-block bg-blue-100 text-blue-600 rounded">
-              service
-            </div>
-          )}
+  const nodes: Node[] = [];
 
-          {task.command && (
-            <div className="text-xs text-slate-400 mt-1 truncate">
-              {task.command}
+  levels.forEach((levelTasks, levelIndex) => {
+    const totalHeight = levelTasks.length * verticalSpacing;
+    const startY = -totalHeight / 2;
+
+    levelTasks.forEach((task, i) => {
+      nodes.push({
+        id: task.id,
+        type: "default",
+        position: {
+          x: levelIndex * horizontalSpacing,
+          y: startY + i * verticalSpacing,
+        },
+        data: {
+          label: (
+            <div className="text-left">
+              <div className="font-semibold text-slate-800">
+                {task.task}
+              </div>
+              <div className="text-xs text-slate-500">
+                {task.folder}
+              </div>
+
+              {task.type === "service" && (
+                <div className="text-[10px] mt-1 px-2 py-0.5 inline-block bg-blue-100 text-blue-600 rounded">
+                  service
+                </div>
+              )}
+
+              {task.command && (
+                <div className="text-xs text-slate-400 mt-1 truncate">
+                  {task.command}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      ),
-    },
-    position: {
-      x: 100,
-      y: index * 130,
-    },
-    style: {
-      border: "2px solid #2563eb",
-      borderRadius: "10px",
-      background: "#ffffff",
-      padding: "10px",
-      width: 240,
-      boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-    },
-  }));
+          ),
+        },
+        style: {
+          border: "2px solid #2563eb",
+          borderRadius: "10px",
+          background: "#ffffff",
+          padding: "10px",
+          width: 240,
+          boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+        },
+      });
+    });
+  });
 
   const edges: Edge[] = deps.map((d) => ({
     id: `${d.from}->${d.to}`,
     source: d.from,
     target: d.to,
-    type: "smoothstep",
+    type: "bezier", // curved
+    animated: true, // optional but looks good
     markerEnd: {
       type: MarkerType.ArrowClosed,
       color: "#2563eb",
@@ -90,7 +111,6 @@ export function toReactFlowGraph(tasks: Task[], deps: Dependency[]) {
 
   return { nodes, edges };
 }
-
 export function DependencyGraph({
   apiData,
 }: {
@@ -109,31 +129,39 @@ export function DependencyGraph({
   const [readyKind, setReadyKind] = useState<"exit" | "port" | "log">("exit");
   const [readyPort, setReadyPort] = useState<number>(3000);
   const [readyLogMatch, setReadyLogMatch] = useState("");
+  const [levels, setLevels] = useState<Task[][]>([]);
 
+  useEffect(() => {
+    analyze("parallel").then((res) => {
+      if (res.ok) {
+        setLevels(res.levels);
+      }
+    });
+  }, [apiData.tasks, apiData.dependencies]);
   const deleteTaskMutation = useDeleteTask();
   const deleteDependencyMutation = useDeleteDependency();
   const addDependencyMutation = useAddDependency();
   const updateTaskMutation = useUpdateTask();
 
   useEffect(() => {
-    const { nodes, edges } = toReactFlowGraph(
-      apiData.tasks,
-      apiData.dependencies
+    const { nodes, edges } = toReactFlowGraphFromLevels(
+      levels,
+      apiData.dependencies,
     );
     setNodes(nodes);
     setEdges(edges);
-  }, [apiData.tasks, apiData.dependencies]);
+  }, [levels, apiData.dependencies]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) =>
       setNodes((nds) => applyNodeChanges(changes, nds)),
-    []
+    [],
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) =>
       setEdges((eds) => applyEdgeChanges(changes, eds)),
-    []
+    [],
   );
 
   const onNodesDelete = useCallback(
@@ -142,7 +170,7 @@ export function DependencyGraph({
         deleteTaskMutation.mutate(node.id);
       });
     },
-    [deleteTaskMutation]
+    [deleteTaskMutation],
   );
 
   const onEdgesDelete = useCallback(
@@ -154,7 +182,7 @@ export function DependencyGraph({
         });
       });
     },
-    [deleteDependencyMutation]
+    [deleteDependencyMutation],
   );
 
   const onConnect = useCallback(
@@ -166,7 +194,7 @@ export function DependencyGraph({
         to: params.target,
       });
     },
-    [addDependencyMutation]
+    [addDependencyMutation],
   );
 
   const onNodeDoubleClick = useCallback(
@@ -194,7 +222,7 @@ export function DependencyGraph({
         setReadyKind("exit");
       }
     },
-    [apiData.tasks]
+    [apiData.tasks],
   );
 
   const handleUpdateTask = () => {
@@ -249,6 +277,8 @@ export function DependencyGraph({
           deleteKeyCode={["Backspace", "Delete"]}
           panOnScroll
           zoomOnScroll
+        
+defaultEdgeOptions={{ type: "bezier" }}
         >
           <Background />
           <Controls />
@@ -260,9 +290,7 @@ export function DependencyGraph({
           <Card className="w-[450px] shadow-2xl">
             <CardHeader>
               <CardTitle>Edit Task</CardTitle>
-              <CardDescription>
-                Update task configuration
-              </CardDescription>
+              <CardDescription>Update task configuration</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -316,9 +344,7 @@ export function DependencyGraph({
                     className="w-full border p-2 rounded"
                     value={readyKind}
                     onChange={(e) =>
-                      setReadyKind(
-                        e.target.value as "exit" | "port" | "log"
-                      )
+                      setReadyKind(e.target.value as "exit" | "port" | "log")
                     }
                   >
                     <option value="exit">Process exits</option>
@@ -331,9 +357,7 @@ export function DependencyGraph({
                       type="number"
                       className="w-full border p-2 rounded"
                       value={readyPort}
-                      onChange={(e) =>
-                        setReadyPort(Number(e.target.value))
-                      }
+                      onChange={(e) => setReadyPort(Number(e.target.value))}
                       placeholder="Port number"
                     />
                   )}
@@ -342,9 +366,7 @@ export function DependencyGraph({
                     <input
                       className="w-full border p-2 rounded"
                       value={readyLogMatch}
-                      onChange={(e) =>
-                        setReadyLogMatch(e.target.value)
-                      }
+                      onChange={(e) => setReadyLogMatch(e.target.value)}
                       placeholder="Log match text"
                     />
                   )}
@@ -352,10 +374,7 @@ export function DependencyGraph({
               )}
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setEditingTask(null)}
-                >
+                <Button variant="ghost" onClick={() => setEditingTask(null)}>
                   Cancel
                 </Button>
 
@@ -363,9 +382,7 @@ export function DependencyGraph({
                   onClick={handleUpdateTask}
                   disabled={updateTaskMutation.isPending}
                 >
-                  {updateTaskMutation.isPending
-                    ? "Saving..."
-                    : "Save"}
+                  {updateTaskMutation.isPending ? "Saving..." : "Save"}
                 </Button>
               </div>
             </CardContent>

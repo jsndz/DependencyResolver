@@ -22,7 +22,7 @@ function selectTerminalId(task: Task): string {
 
     if (!parentTask || !parentTerminal) continue;
 
-    if (parentTask.state === "running") {
+    if (parentTask.type === "service") {
       continue;
     }
 
@@ -32,7 +32,6 @@ function selectTerminalId(task: Task): string {
         terminalId: parentTerminal.terminalId,
         taken: true,
       });
-
       return parentTerminal.terminalId;
     }
   }
@@ -61,7 +60,6 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
         name: task.task,
       })}\n\n`,
     );
-
     res.write(
       `data: ${JSON.stringify({
         type: "task_started",
@@ -111,40 +109,13 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
         })}\n\n`,
       );
     });
-
-    if (task.type === "service") {
-      await readinessCheck(task, child)
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          try {
-            if (child.pid) {
-              process.kill(-child.pid, "SIGTERM");
-            }
-          } catch (err: any) {
-            if (err.code !== "ESRCH") {
-              throw err; 
-            }
-            
-          }
-        });
-
-      return;
-    }
-
     child.on("close", (code: number | null) => {
       const entry = terminal.get(task.id);
-      if (entry) {
-        entry.taken = false;
-      }
+      if (entry) entry.taken = false;
 
       const ok = code === 0 || code === null;
-
       if (task.type === "job") {
         task.state = ok ? "completed" : "failed";
-      } else {
-        task.state = "failed";
       }
 
       runningProcesses.delete(task.id);
@@ -159,27 +130,48 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
         })}\n\n`,
       );
 
-      resolve();
+      if (ok) {
+        resolve();
+      } else {
+        reject();
+      }
     });
 
     child.on("error", (err) => {
       reject(new Error(`Failed to start process for task ${task.task}`));
     });
+
+    if (task.type === "service") {
+      readinessCheck(task, child)
+        .then(() => {
+          resolve();
+        })
+        .catch((err) => {
+
+        });
+
+      return;
+    }
   });
 }
 
 async function readinessCheck(task: Task, child: ChildProcess): Promise<void> {
-  if (task.state === "ready") return;
-  if (!task.ready) return;
+  if (task.state === "ready") {
+    return;
+  }
+
+  if (!task.ready) {
+    return;
+  }
 
   if (task.ready.kind === "port") {
-    await waitForPort(task.ready.port, child);
+    await waitForPort(task.ready.port, child, task.task);
     task.state = "ready";
     return;
   }
 
   if (task.ready.kind === "log") {
-    await waitForLog(child, task.ready.match);
+    await waitForLog(child, task.ready.match, task.task);
     task.state = "ready";
     return;
   }
@@ -188,6 +180,7 @@ async function readinessCheck(task: Task, child: ChildProcess): Promise<void> {
 function waitForPort(
   port: number,
   child: ChildProcess,
+  taskName: string,
   ip = "127.0.0.1",
   timeout = 30_000,
 ): Promise<void> {
@@ -242,6 +235,7 @@ function waitForPort(
 function waitForLog(
   child: ChildProcess,
   match: string | RegExp,
+  taskName: string,
   timeout = 30_000,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -254,10 +248,9 @@ function waitForLog(
         buffer = buffer.slice(-MAX_BUFFER);
       }
 
-      const ok =
-        typeof match === "string" ? buffer.includes(match) : match.test(buffer);
-
-      if (ok) {
+      if (
+        typeof match === "string" ? buffer.includes(match) : match.test(buffer)
+      ) {
         cleanup();
         resolve();
       }
