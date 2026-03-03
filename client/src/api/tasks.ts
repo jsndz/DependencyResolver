@@ -49,6 +49,13 @@ export const execute = async () => {
   return data;
 };
 
+export const stats = async () => {
+  const { data } = await api.get("/system/stats");
+
+  return data;
+};
+
+
 export const stopExecution = async () => {
   const { data } = await api.get("/execution/stop");
   console.log("stop execution called from api");

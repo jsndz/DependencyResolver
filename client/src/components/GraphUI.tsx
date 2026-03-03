@@ -38,7 +38,7 @@ type ReadyWhen =
 
 export function toReactFlowGraphFromLevels(
   levels: Task[][],
-  deps: Dependency[]
+  deps: Dependency[],
 ) {
   const horizontalSpacing = 400;
   const verticalSpacing = 160;
@@ -60,12 +60,8 @@ export function toReactFlowGraphFromLevels(
         data: {
           label: (
             <div className="text-left">
-              <div className="font-semibold text-slate-800">
-                {task.task}
-              </div>
-              <div className="text-xs text-slate-500">
-                {task.folder}
-              </div>
+              <div className="font-semibold text-slate-800">{task.task}</div>
+              <div className="text-xs text-slate-500">{task.folder}</div>
 
               {task.type === "service" && (
                 <div className="text-[10px] mt-1 px-2 py-0.5 inline-block bg-blue-100 text-blue-600 rounded">
@@ -277,8 +273,7 @@ export function DependencyGraph({
           deleteKeyCode={["Backspace", "Delete"]}
           panOnScroll
           zoomOnScroll
-        
-defaultEdgeOptions={{ type: "bezier" }}
+          defaultEdgeOptions={{ type: "bezier" }}
         >
           <Background />
           <Controls />

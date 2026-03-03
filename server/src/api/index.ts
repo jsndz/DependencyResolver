@@ -16,6 +16,7 @@ import {
   dagToYaml,
   WorkFlowToDAG,
 } from "../services/parser.js";
+import { getSystemStats } from "../lib/os.js";
 
 const router = Router();
 
@@ -219,6 +220,15 @@ router.get("/task/:id/stop", (req, res) => {
     res.json({ ok: r });
   } catch (err) {
     res.status(400).json({ error: String(err) });
+  }
+});
+
+router.get("/system/stats", (req, res) => {
+  try {
+    const stats = getSystemStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
   }
 });
 

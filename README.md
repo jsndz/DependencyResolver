@@ -148,7 +148,7 @@ orchestra/
 
 ### Run Locally
 
-#### Start the server (port 3000)
+#### Start the server (port 5601)
 
 ```bash
 cd server
@@ -156,7 +156,7 @@ bun install
 bun run .
 ```
 
-#### Start the frontend (port 5173)
+#### Start the frontend (port 6080)
 
 ```bash
 cd client
@@ -164,7 +164,7 @@ npm install
 npm run dev
 ```
 
-Open **[http://localhost:5173](http://localhost:5173)** in your browser.
+Open **[http://localhost:6080](http://localhost:6080)** in your browser.
 
 ---
 
@@ -208,22 +208,8 @@ Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 - a workflow planner
 - a dependency resolver
 - a local execution engine
-- a learning tool for graph-based systems
-
-**Orchestra is not:**
-
-- a production CI/CD platform
-- a cloud scheduler
-- a graph visualizer
-- a replacement for Airflow or Jenkins
 
 ---
-
-## Todo
-
-- Task Crud
-- READ AND WRITE terminal
-- Close Individual terminals
 
 
 ---

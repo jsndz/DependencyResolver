@@ -73,11 +73,11 @@ export default function WorkflowControls({ tasks, dependencies }: any) {
   };
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="relative flex flex-col items-center">
+    <div className="flex flex-col items-center">
+      <div className="relative">
 
         {(mode === "add" || mode === "new") && (
-          <Card className="absolute bottom-full mb-4 w-96 p-4 space-y-3 shadow-xl">
+          <Card className="absolute bottom-full mb-4 w-96 p-4 space-y-3 shadow-xl bg-card/95 backdrop-blur-sm">
             <Button variant="ghost" size="sm" onClick={() => setMode("none")}>
               ← Back
             </Button>
@@ -163,7 +163,7 @@ export default function WorkflowControls({ tasks, dependencies }: any) {
         )}
 
         {mode === "link" && (
-          <Card className="absolute bottom-full mb-4 w-96 shadow-xl">
+          <Card className="absolute bottom-full mb-4 w-96 shadow-xl bg-card/95 backdrop-blur-sm">
             <DependencyForm
               tasks={tasks}
               dependencies={dependencies}
@@ -172,7 +172,7 @@ export default function WorkflowControls({ tasks, dependencies }: any) {
           </Card>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 bg-card/95 backdrop-blur-sm border rounded-lg p-2 shadow-lg">
           <Button onClick={() => setMode("add")}>
             <Plus className="h-4 w-4 mr-2" />
             Add Step

@@ -58,3 +58,10 @@ export function useyaml(){
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }
+export function useSystemStats() {
+  return useQuery({
+    queryKey: ["system-stats"],
+    queryFn: api.stats,
+    refetchInterval: 5000,
+  });
+}

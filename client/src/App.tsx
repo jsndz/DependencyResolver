@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import TasksPage from "./pages/TasksPage";
 import AnalysisPage from "./pages/AnalysisPage";
 import {ExecutionPage} from "./pages/ExecutionPage";
+import { ReportPage } from "./pages/ReportPage";
 
 function App() {
   return (
@@ -11,10 +12,10 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/tasks" element={<TasksPage />} />
 
-      <Route element={<Layout />}>
         <Route path="/analysis" element={<AnalysisPage />} />
-      </Route>
+   
       <Route path="/execution" element={<ExecutionPage />} />
+      <Route path="/report" element={<ReportPage />} />
     </Routes>
   );
 }

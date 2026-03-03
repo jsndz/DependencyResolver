@@ -1,18 +1,12 @@
 import { useState } from "react";
 import {
-  Play,
-  AlertCircle,
-  GitBranch,
-  Flag,
+  Activity,
   AlertTriangle,
-  Route,
-  Zap,
-  Loader2,
-  ArrowRight,
+  Network,
+  TrendingUp,
+  GitBranch,
+  PlayCircle,
 } from "lucide-react";
-
-import { Task } from "../types";
-import { useAnalysis } from "../hooks/useAnalysis";
 
 import {
   Card,
@@ -22,6 +16,7 @@ import {
   CardContent,
 } from "./ui/card";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import {
   Select,
@@ -30,115 +25,255 @@ import {
   SelectContent,
   SelectItem,
 } from "./ui/select";
+import { Task } from "../types";
 
-const analyses = [
-  { type: "order" as const, label: "Resolve Order", icon: Play, description: "Topological order" },
-  { type: "cycle" as const, label: "Detect Cycle", icon: AlertCircle, description: "Find cycles" },
-  { type: "parallel" as const, label: "Parallel Plan", icon: GitBranch, description: "Execution levels" },
-  { type: "terminal" as const, label: "Terminal Tasks", icon: Flag, description: "Leaf nodes" },
-  { type: "unreachable" as const, label: "Unreachable", icon: AlertTriangle, description: "Orphan tasks" },
+/* ----------------------- */
+/* Dummy Data (Replace later) */
+/* ----------------------- */
+
+const dummyMetrics = {
+  totalTasks: 15,
+  depth: 5,
+  maxParallel: 4,
+  criticalLength: 5,
+};
+
+const dummyCriticalPath = [
+  "zookeeper",
+  "kafka",
+  "auth",
+  "gateway",
+  "client",
 ];
 
-export default function AnalysisPanel({ tasks }: { tasks: Task[] }) {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const analyze = useAnalysis();
+const dummyBottlenecks = [
+  { name: "kafka", blocks: 5 },
+  { name: "gateway", blocks: 2 },
+  { name: "auth.db", blocks: 1 },
+];
+
+const dummyRoots = ["zookeeper", "auth.volume", "fencer.volume"];
+
+const dummyFailureImpact: Record<string, string[]> = {
+  kafka: [
+    "alert",
+    "auth",
+    "geo.fencer",
+    "server",
+    "location.logger",
+    "gateway",
+    "client",
+  ],
+  gateway: ["client"],
+  auth: ["gateway", "client"],
+};
+
+
+
+export default function AnalysisPanel({tasks}: {tasks: Task[]}) {
+  const [selectedFailure, setSelectedFailure] = useState("");
+
+  const impacted = selectedFailure
+    ? dummyFailureImpact[selectedFailure] || []
+    : [];
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-3">
-        <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600">
-          <Zap size={18} />
+        <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600">
+          <Activity size={18} />
         </div>
         <div>
-          <CardTitle>Analysis</CardTitle>
-          <CardDescription>Run checks on your dependency graph</CardDescription>
+          <CardTitle>Advanced Insights</CardTitle>
+          <CardDescription>
+            Architectural intelligence & execution analysis
+          </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Run analysis */}
+      <CardContent className="space-y-8">
+        {/* -------------------- */}
+        {/* Graph Metrics Summary */}
+        {/* -------------------- */}
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            Run analysis
+            Graph Summary
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {analyses.map(({ type, label, icon: Icon, description }) => (
-              <Button
-                key={type}
-                variant="outline"
-                disabled={analyze.isPending}
-                onClick={() => analyze.mutate({ type })}
-                className="h-auto p-4 justify-start gap-3"
-              >
-                <div className="p-1.5 rounded-md bg-muted text-muted-foreground">
-                  <Icon size={18} />
-                </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricCard label="Tasks" value={dummyMetrics.totalTasks} />
+            <MetricCard label="Depth" value={dummyMetrics.depth} />
+            <MetricCard label="Max Parallel" value={dummyMetrics.maxParallel} />
+            <MetricCard
+              label="Critical Path"
+              value={dummyMetrics.criticalLength}
+            />
+          </div>
+        </div>
 
-                <div className="text-left flex-1">
-                  <div className="text-sm font-medium">{label}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {description}
-                  </div>
-                </div>
+        <Separator />
 
-                {analyze.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        {/* -------------------- */}
+        {/* Critical Path */}
+        {/* -------------------- */}
+        <div>
+          <SectionHeader
+            icon={TrendingUp}
+            title="Critical Path"
+            description="Longest blocking execution chain"
+          />
+
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {dummyCriticalPath.map((step, i) => (
+              <div key={step} className="flex items-center gap-2">
+                <Badge variant="secondary">{step}</Badge>
+                {i < dummyCriticalPath.length - 1 && (
+                  <GitBranch size={14} className="text-muted-foreground" />
                 )}
-              </Button>
+              </div>
             ))}
           </div>
         </div>
 
         <Separator />
 
-        {/* Find path */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Find path
-          </h3>
+        {/* -------------------- */}
+        {/* Bottlenecks */}
+        {/* -------------------- */}
+        <div>
+          <SectionHeader
+            icon={Network}
+            title="Bottlenecks"
+            description="Tasks that block the most dependents"
+          />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Select value={from} onValueChange={setFrom}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="From" />
+          <div className="space-y-2 mt-3">
+            {dummyBottlenecks.map((b) => (
+              <div
+                key={b.name}
+                className="flex items-center justify-between border rounded-md p-3"
+              >
+                <span className="font-medium">{b.name}</span>
+                <Badge variant="destructive">
+                  Blocks {b.blocks} task{b.blocks > 1 ? "s" : ""}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* -------------------- */}
+        {/* Root Tasks */}
+        {/* -------------------- */}
+        <div>
+          <SectionHeader
+            icon={PlayCircle}
+            title="Root Tasks"
+            description="Tasks with no dependencies"
+          />
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {dummyRoots.map((root) => (
+              <Badge key={root}>{root}</Badge>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* -------------------- */}
+        {/* Failure Simulation */}
+        {/* -------------------- */}
+        <div>
+          <SectionHeader
+            icon={AlertTriangle}
+            title="Failure Simulation"
+            description="See what breaks if a task fails"
+          />
+
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <Select
+              value={selectedFailure}
+              onValueChange={setSelectedFailure}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select task" />
               </SelectTrigger>
               <SelectContent>
-                {tasks.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.task}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <ArrowRight className="text-muted-foreground" />
-
-            <Select value={to} onValueChange={setTo}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="To" />
-              </SelectTrigger>
-              <SelectContent>
-                {tasks.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.task}
+                {Object.keys(dummyFailureImpact).map((task) => (
+                  <SelectItem key={task} value={task}>
+                    {task}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <Button
-              disabled={!from || !to || from === to || analyze.isPending}
-              onClick={() => analyze.mutate({ type: "path", from, to })}
-              className="gap-2"
+              variant="outline"
+              disabled={!selectedFailure}
+              onClick={() => {}}
             >
-              <Route size={16} />
-              Find Path
+              Simulate
             </Button>
           </div>
+
+          {selectedFailure && (
+            <div className="mt-4 space-y-2">
+              {impacted.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No downstream impact.
+                </div>
+              ) : (
+                impacted.map((task) => (
+                  <div
+                    key={task}
+                    className="border rounded-md p-2 text-sm"
+                  >
+                    {task}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/* ----------------------- */
+/* Small UI Helpers */
+/* ----------------------- */
+
+function MetricCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border rounded-lg p-4 text-center">
+      <div className="text-xl font-semibold">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: any;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="p-2 rounded-md bg-muted text-muted-foreground">
+        <Icon size={16} />
+      </div>
+      <div>
+        <div className="text-sm font-semibold">{title}</div>
+        <div className="text-xs text-muted-foreground">{description}</div>
+      </div>
+    </div>
   );
 }

@@ -65,13 +65,12 @@ export const ExecutionPage = () => {
         </a>
 
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/")}
-          >
+          <Button variant="outline" onClick={() => navigate("/")}>
             Back to Tasks
           </Button>
-
+          <Button variant="outline" onClick={() => navigate("/report")}>
+            Report
+          </Button>
           <Button
             onClick={handleStop}
             disabled={status === "loading" || status === "stopped"}
@@ -80,9 +79,7 @@ export const ExecutionPage = () => {
             {getButtonText()}
           </Button>
 
-          <Button onClick={() => setIsDialogOpen(true)}>
-            Create YAML
-          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>Create YAML</Button>
         </div>
       </div>
 
@@ -101,9 +98,7 @@ export const ExecutionPage = () => {
       {isDialogOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-zinc-800 p-6 rounded-xl w-96 shadow-lg space-y-4">
-            <h2 className="text-lg font-semibold">
-              Download Workflow as YAML
-            </h2>
+            <h2 className="text-lg font-semibold">Download Workflow as YAML</h2>
 
             <input
               type="text"

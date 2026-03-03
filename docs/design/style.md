@@ -23,11 +23,7 @@ Inspired by:
 * workflow engines
 * execution monitors
 
-Not inspired by:
 
-* marketing sites
-* playful SaaS
-* experimental UI trends
 
 ---
 
