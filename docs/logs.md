@@ -143,3 +143,14 @@ The backend logic was completed.
 Date: Feb 26,2026
 
 Added states for frontend.
+This completes the essentials for running any workflows.
+The MVP is ready in this stage.
+
+Phase 14: Redesign
+
+Date: March 3,2026
+This Phase would be completely dedicated for redesigning the product interms of UI/UX. 
+
+
+Date: March 4,2026
+Redesigned the task page to add list of tasks, edit sidebar, system information in the bottom and filenames in the folder

@@ -109,13 +109,15 @@ export function toReactFlowGraphFromLevels(
 }
 export function DependencyGraph({
   apiData,
+  editingTask,
+  setEditingTask,
 }: {
   apiData: { tasks: Task[]; dependencies: Dependency[] };
+  editingTask: Task | null;
+  setEditingTask: (task: Task | null) => void;
 }) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const [taskName, setTaskName] = useState("");
   const [folderName, setFolderName] = useState("");
@@ -126,7 +128,28 @@ export function DependencyGraph({
   const [readyPort, setReadyPort] = useState<number>(3000);
   const [readyLogMatch, setReadyLogMatch] = useState("");
   const [levels, setLevels] = useState<Task[][]>([]);
+  useEffect(() => {
+    if (!editingTask) return;
 
+    setTaskName(editingTask.task);
+    setFolderName(editingTask.folder);
+    setCommand(editingTask.command ?? "");
+    setTaskType(editingTask.type);
+
+    if (editingTask.ready) {
+      setReadyKind(editingTask.ready.kind);
+
+      if (editingTask.ready.kind === "port") {
+        setReadyPort(editingTask.ready.port);
+      }
+
+      if (editingTask.ready.kind === "log") {
+        setReadyLogMatch(String(editingTask.ready.match));
+      }
+    } else {
+      setReadyKind("exit");
+    }
+  }, [editingTask]);
   useEffect(() => {
     analyze("parallel").then((res) => {
       if (res.ok) {
@@ -193,34 +216,15 @@ export function DependencyGraph({
     [addDependencyMutation],
   );
 
-  const onNodeDoubleClick = useCallback(
+  const onNodeClick = useCallback(
     (_: any, node: Node) => {
       const task = apiData.tasks.find((t) => t.id === node.id);
       if (!task) return;
 
       setEditingTask(task);
-      setTaskName(task.task);
-      setFolderName(task.folder);
-      setCommand(task.command ?? "");
-      setTaskType(task.type);
-
-      if (task.ready) {
-        setReadyKind(task.ready.kind);
-
-        if (task.ready.kind === "port") {
-          setReadyPort(task.ready.port);
-        }
-
-        if (task.ready.kind === "log") {
-          setReadyLogMatch(String(task.ready.match));
-        }
-      } else {
-        setReadyKind("exit");
-      }
     },
-    [apiData.tasks],
+    [apiData.tasks, setEditingTask],
   );
-
   const handleUpdateTask = () => {
     if (!editingTask) return;
 
@@ -264,7 +268,7 @@ export function DependencyGraph({
           onEdgesChange={onEdgesChange}
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
-          onNodeDoubleClick={onNodeDoubleClick}
+          onNodeClick={onNodeClick}
           onConnect={onConnect}
           fitView
           nodesDraggable
@@ -281,107 +285,148 @@ export function DependencyGraph({
       </div>
 
       {editingTask && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <Card className="w-[450px] shadow-2xl">
-            <CardHeader>
-              <CardTitle>Edit Task</CardTitle>
-              <CardDescription>Update task configuration</CardDescription>
-            </CardHeader>
+        <div className="absolute right-0 top-0 h-full w-96 bg-background border-l p-6 overflow-y-auto z-50 flex flex-col">
+          {/* HEADER */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-semibold text-lg">Edit Step</h2>
 
-            <CardContent className="space-y-4">
+            <button
+              onClick={() => setEditingTask(null)}
+              className="p-1 rounded hover:bg-muted"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-5 flex-1">
+            {/* TASK NAME */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">
+                Task Name
+              </label>
               <input
                 className="w-full border p-2 rounded"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
-                placeholder="Task name"
               />
+            </div>
 
+            {/* FOLDER */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">
+                Folder
+              </label>
               <input
                 className="w-full border p-2 rounded"
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
-                placeholder="Folder"
               />
+            </div>
 
+            {/* COMMAND */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">
+                Command
+              </label>
               <textarea
                 className="w-full border p-2 rounded resize-none"
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
-                placeholder="Command"
                 rows={3}
               />
+            </div>
 
-              {/* Type */}
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Task Type
+            {/* TYPE */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Step Type
+              </label>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTaskType("job")}
+                  className={`flex-1 border rounded p-2 text-sm font-medium transition ${
+                    taskType === "job"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  JOB
+                </button>
+
+                <button
+                  onClick={() => setTaskType("service")}
+                  className={`flex-1 border rounded p-2 text-sm font-medium transition ${
+                    taskType === "service"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  SERVICE
+                </button>
+              </div>
+            </div>
+
+            {/* READY CONDITION */}
+            {taskType === "service" && (
+              <div className="space-y-3 border rounded p-3">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Ready Condition
                 </label>
+
                 <select
                   className="w-full border p-2 rounded"
-                  value={taskType}
+                  value={readyKind}
                   onChange={(e) =>
-                    setTaskType(e.target.value as "job" | "service")
+                    setReadyKind(e.target.value as "exit" | "port" | "log")
                   }
                 >
-                  <option value="job">Job</option>
-                  <option value="service">Service</option>
+                  <option value="exit">Process exits</option>
+                  <option value="port">Port open</option>
+                  <option value="log">Log match</option>
                 </select>
-              </div>
 
-              {/* Ready Section */}
-              {taskType === "service" && (
-                <div className="space-y-3 border rounded p-3 ">
-                  <label className="block text-sm font-medium">
-                    Ready When
-                  </label>
-
-                  <select
+                {readyKind === "port" && (
+                  <input
+                    type="number"
                     className="w-full border p-2 rounded"
-                    value={readyKind}
-                    onChange={(e) =>
-                      setReadyKind(e.target.value as "exit" | "port" | "log")
-                    }
-                  >
-                    <option value="exit">Process exits</option>
-                    <option value="port">Port is open</option>
-                    <option value="log">Log contains text</option>
-                  </select>
+                    value={readyPort}
+                    onChange={(e) => setReadyPort(Number(e.target.value))}
+                    placeholder="Port number"
+                  />
+                )}
 
-                  {readyKind === "port" && (
-                    <input
-                      type="number"
-                      className="w-full border p-2 rounded"
-                      value={readyPort}
-                      onChange={(e) => setReadyPort(Number(e.target.value))}
-                      placeholder="Port number"
-                    />
-                  )}
-
-                  {readyKind === "log" && (
-                    <input
-                      className="w-full border p-2 rounded"
-                      value={readyLogMatch}
-                      onChange={(e) => setReadyLogMatch(e.target.value)}
-                      placeholder="Log match text"
-                    />
-                  )}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="ghost" onClick={() => setEditingTask(null)}>
-                  Cancel
-                </Button>
-
-                <Button
-                  onClick={handleUpdateTask}
-                  disabled={updateTaskMutation.isPending}
-                >
-                  {updateTaskMutation.isPending ? "Saving..." : "Save"}
-                </Button>
+                {readyKind === "log" && (
+                  <input
+                    className="w-full border p-2 rounded"
+                    value={readyLogMatch}
+                    onChange={(e) => setReadyLogMatch(e.target.value)}
+                    placeholder="Log match text"
+                  />
+                )}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+
+          {/* ACTIONS */}
+          <div className="flex justify-between pt-6 border-t mt-6">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deleteTaskMutation.mutate(editingTask.id);
+                setEditingTask(null);
+              }}
+            >
+              Delete
+            </Button>
+
+            <Button
+              onClick={handleUpdateTask}
+              disabled={updateTaskMutation.isPending}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       )}
     </>

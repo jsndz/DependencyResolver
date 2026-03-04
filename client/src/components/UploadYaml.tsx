@@ -3,18 +3,22 @@ import { Link } from "lucide-react";
 import { Button } from "./ui/button";
 import { fetchTasks, uploadYaml } from "../api/tasks";
 
-export default function UploadYaml({ onSuccess }: { onSuccess: () => void }) {
+export default function UploadYaml({
+  onSuccess,
+}: {
+  onSuccess: (fileName?: string) => void;
+}) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       await uploadYaml(file);
-       await onSuccess();
+      if (onSuccess) {
+        onSuccess(file.name);
+      }
     } catch (err) {
       console.error("Upload failed:", err);
     }
