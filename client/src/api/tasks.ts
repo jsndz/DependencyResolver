@@ -8,14 +8,12 @@ export const fetchTasks = async (): Promise<{
   dependencies: Dependency[];
 }> => {
   const { data } = await api.get("/tasks");
-  console.log("task and dep \n", data);
 
   return data;
 };
 
 export const addTask = async (task: TaskRequest) => {
   const { data } = await api.post("/task", task);
-  console.log("added task\n", data);
 
   return data;
 };
@@ -58,7 +56,6 @@ export const stats = async () => {
 
 export const stopExecution = async () => {
   const { data } = await api.get("/execution/stop");
-  console.log("stop execution called from api");
 
   return data;
 };
@@ -72,9 +69,13 @@ export const stopProcess = async (id: string) => {
 export const uploadYaml = async (file: File) => {
   const text = await file.text();
   const { data } = await api.post("/yaml", { yaml: text });
-  console.log(data);
 
   return data;
+};
+export const fetchLogs = async (taskId: string) => {
+  const { data } = await api.get(`/log/${taskId}`);
+
+  return data.logs;
 };
 
 export const downloadYaml = async (workflowName: string) => {

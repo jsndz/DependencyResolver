@@ -1,6 +1,6 @@
 import { Router, type Response } from "express";
 import crypto from "crypto";
-import { tasks, dependencies, type Task } from "../store/index.js";
+import { tasks, dependencies, type Task, taskLogs } from "../store/index.js";
 import {
   detectCycle,
   parallelExecution,
@@ -32,7 +32,7 @@ router.post("/task", (req, res) => {
     command: req.body.command,
     dependency: [],
     type: req.body.type,
-    state:"idle",
+    state: "idle",
     ready: req.body.type === "service" ? req.body.ready : { kind: "exit" },
   };
   tasks.push(t);
@@ -142,8 +142,6 @@ router.get("/execute", async (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders?.();
   req.on("close", () => {
-    console.log("wanted to close connection by /eexcute");
-    
     stopExecution();
   });
   const result = await execute(res);
@@ -162,7 +160,6 @@ router.post("/yaml", (req, res) => {
   if (typeof yaml !== "string") {
     return res.status(400).json({ error: "Missing yaml in body" });
   }
-  console.log("hello");
 
   try {
     const dag = yamlToDag(yaml);
@@ -175,7 +172,6 @@ router.post("/yaml", (req, res) => {
 
     for (const t of newTasks) tasks.push(t as any);
     for (const d of newDeps) dependencies.push(d as any);
-    console.log(tasks, dependencies);
 
     res.json({ ok: true });
   } catch (err: any) {
@@ -203,7 +199,6 @@ router.get("/yaml/:workflow", (req, res) => {
 router.get("/execution/stop", async (req, res) => {
   try {
     const r = await stopExecution();
-        console.log("wanted to close connection by /execution/stop");
 
     if (r) {
       res.json({ ok: true });
@@ -232,4 +227,9 @@ router.get("/system/stats", (req, res) => {
   }
 });
 
+router.get("/log/:taskId", (req, res) => {
+  const taskId = req.params.taskId;
+  const logs = taskLogs.get(taskId) ?? [];
+  res.json({ logs });
+});
 export default router;

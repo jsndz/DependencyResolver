@@ -32,3 +32,4 @@ export const terminal: Map<string, { terminalId: string; taken: boolean }> =
 export const tasks: Task[] = [];
 export const dependencies: Dependency[] = [];
 export const runningProcesses = new Map<string, ChildProcess>();
+export const taskLogs = new Map<string, string[]>();

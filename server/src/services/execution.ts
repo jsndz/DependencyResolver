@@ -68,7 +68,6 @@ export async function execute(res: Response) {
       }
     });
   }
-console.log("execution completed");
 
   return {
     ok: true,

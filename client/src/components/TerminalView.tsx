@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { downloadYaml, stopExecution } from "../api/tasks";
-import Terminal from "../components/Terminal";
-import { Button } from "../components/ui/button";
+import Terminal from "./Terminal";
+import { Button } from "./ui/button";
 import { useTerminals } from "../hooks/useTerminals";
-
-export const ExecutionPage = () => {
+import { useSystemStats } from "../hooks/useTasks";
+type ViewMode = "terminal" | "graph";
+export const TerminalPage = () => {
+  const [view, setView] = useState<ViewMode>("terminal");
   const { state, registerTerminal } = useTerminals();
   const navigate = useNavigate();
-
+ const { data: systemStats } = useSystemStats();
   const [status, setStatus] = useState<"idle" | "loading" | "stopped">("idle");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
+console.log("state",state);
 
   const handleStop = async () => {
     if (status !== "idle") return;
@@ -55,7 +58,7 @@ export const ExecutionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 p-4 text-white">
+  <div className="min-h-screen bg-zinc-900 text-white flex flex-col">
       <div className="w-full flex justify-between items-center">
         <a
           href="#"
@@ -84,6 +87,8 @@ export const ExecutionPage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+     
+        
         {Object.values(state).map((t) => (
           <Terminal
             key={t.terminalId}
@@ -129,6 +134,35 @@ export const ExecutionPage = () => {
           </div>
         </div>
       )}
-    </div>
+        <footer className="h-8 border-t border-zinc-800 px-4 flex items-center justify-between text-xs text-zinc-400 bg-zinc-950">
+      {systemStats ? (
+        <>
+          <div className="flex items-center gap-4">
+            <span>CPU: {systemStats.cpuCores} cores</span>
+            <span>
+              Load:{" "}
+              {systemStats.loadAvg
+                .map((l: number) => l.toFixed(2))
+                .join(", ")}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span>
+              Memory:{" "}
+              {(
+                (systemStats.usedMem / systemStats.totalMem) *
+                100
+              ).toFixed(1)}
+              % used
+            </span>
+            <span>Platform: {systemStats.platform}</span>
+          </div>
+        </>
+      ) : (
+        <span>Loading system stats...</span>
+      )}
+    </footer>
+  </div>
   );
 };

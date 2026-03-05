@@ -149,8 +149,10 @@ The MVP is ready in this stage.
 Phase 14: Redesign
 
 Date: March 3,2026
-This Phase would be completely dedicated for redesigning the product interms of UI/UX. 
-
+This Phase would be completely dedicated for redesigning the product interms of UI/UX.
 
 Date: March 4,2026
-Redesigned the task page to add list of tasks, edit sidebar, system information in the bottom and filenames in the folder
+Redesigned the task page to add list of tasks, edit sidebar, system information in the bottom and filenames in the folder.
+
+Date: March 5,2026
+Redesigned the execution page to provide a graph view with logs. Create a in-memory map to store the logs in the backend.

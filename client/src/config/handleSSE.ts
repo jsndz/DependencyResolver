@@ -5,13 +5,13 @@ type State = Record<string, TerminalUIState>;
 export function terminalsReducer(state: State, event: Events): State {
   switch (event.type) {
     case "terminal_open": {
-      if (state[event.terminalId]) return state;
-
+      const existing = state[event.terminalId];
       return {
         ...state,
         [event.terminalId]: {
+          ...(existing ?? {}),
           terminalId: event.terminalId,
-
+          taskId: event.taskId,
           status: "running",
           name: event.name,
         },
@@ -25,6 +25,7 @@ export function terminalsReducer(state: State, event: Events): State {
         [event.terminalId]: {
           ...(existing ?? {}),
           terminalId: event.terminalId,
+          taskId: event.taskId,
           status: "running",
         },
       };

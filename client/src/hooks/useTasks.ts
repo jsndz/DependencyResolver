@@ -65,3 +65,26 @@ export function useSystemStats() {
     refetchInterval: 5000,
   });
 }
+
+
+export function useLogs(taskId: string | null) {
+  return useQuery({
+    queryKey: ["logs", taskId],
+    queryFn: () => {
+      if (taskId) {
+        return api.fetchLogs(taskId);
+      }
+      return [];
+    },
+    enabled: !!taskId,
+    refetchInterval: 2000,
+  });
+}
+
+export function useStopExecution() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.stopExecution,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+  });
+}

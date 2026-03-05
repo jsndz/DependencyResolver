@@ -2,7 +2,7 @@ import { ChildProcess, spawn } from "child_process";
 import type { Response } from "express";
 import net from "net";
 import crypto from "crypto";
-import { runningProcesses, tasks, terminal, type Task } from "../store";
+import { runningProcesses, taskLogs, tasks, terminal, type Task } from "../store";
 
 function selectTerminalId(task: Task): string {
   function createTerminalId() {
@@ -52,12 +52,14 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
     }
 
     const terminalId = selectTerminalId(task);
-
+    console.log(task.id);
+    taskLogs.set(task.id, []);
     res.write(
       `data: ${JSON.stringify({
         type: "terminal_open",
         terminalId,
         name: task.task,
+        taskId: task.id,
       })}\n\n`,
     );
     res.write(
@@ -86,7 +88,10 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
 
     child.stdout.on("data", (d) => {
       const output = d.toString();
-
+      if (!taskLogs.has(task.id)) {
+        taskLogs.set(task.id, []);
+      }
+      taskLogs.get(task.id)!.push(output);
       res.write(
         `data: ${JSON.stringify({
           type: "task_stdout",
@@ -99,7 +104,10 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
 
     child.stderr.on("data", (d) => {
       const output = d.toString();
-
+      if (!taskLogs.has(task.id)) {
+        taskLogs.set(task.id, []);
+      }
+      taskLogs.get(task.id)!.push(output);
       res.write(
         `data: ${JSON.stringify({
           type: "task_stderr",

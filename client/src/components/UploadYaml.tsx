@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "lucide-react";
 import { Button } from "./ui/button";
-import { fetchTasks, uploadYaml } from "../api/tasks";
+import {  uploadYaml } from "../api/tasks";
 
 export default function UploadYaml({
   onSuccess,

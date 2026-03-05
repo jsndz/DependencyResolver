@@ -101,7 +101,6 @@ addDepBtn.onclick = async () => {
 checkDepBtn.onclick = async () => {
   orderList.innerHTML = "";
   const res = await api("/api/order");
-  console.log(res);
 
   if (res.ok) {
     res.order.forEach((t) => {
@@ -138,7 +137,6 @@ checkParBtn.onclick = async () => {
   parallels.innerHTML = "";
 
   const res = await api(`/api/parallel`);
-  console.log(res);
   if (res.ok) {
     res.levels.forEach((tasks,index) => {
       const li = document.createElement("li");
