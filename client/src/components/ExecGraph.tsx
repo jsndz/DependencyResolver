@@ -7,16 +7,69 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { Dependency, Task } from "../types";
+import { Dependency, StepState, Task } from "../types";
 import { useEffect, useState } from "react";
 import { analyze } from "../api/tasks";
+
+function getStateStyle(state: StepState, isSelected: boolean) {
+  const base = {
+    borderRadius: "10px",
+    padding: "10px",
+    width: 240,
+    color: "#ffffff",
+    fontWeight: 500,
+  };
+
+  const styles: Record<StepState, any> = {
+    idle: {
+      background: "#9ca3af",
+      border: "2px solid #6b7280",
+    },
+
+    starting: {
+      background: "#f59e0b",
+      border: "2px solid #d97706",
+    },
+
+    ready: {
+      background: "#22c55e",
+      border: "2px solid #16a34a",
+    },
+
+    running: {
+      background: "#3b82f6",
+      border: "2px solid #2563eb",
+    },
+
+    completed: {
+      background: "#15803d",
+      border: "2px solid #166534",
+    },
+
+    failed: {
+      background: "#ef4444",
+      border: "2px solid #b91c1c",
+    },
+
+    stopped: {
+      background: "#6b7280",
+      border: "2px solid #4b5563",
+    },
+  };
+
+  const selected = isSelected
+    ? { boxShadow: "0 0 0 5px rgba(0,0,0,0.25)" }
+    : {};
+
+  return { ...base, ...styles[state], ...selected };
+}
 
 function toReactFlowGraphFromLevels(
   levels: Task[][],
   deps: Dependency[],
   selectedId: string | null,
 ) {
-  const horizontalSpacing = 400;
+  const horizontalSpacing = 400; 
   const verticalSpacing = 160;
 
   const nodes: Node[] = [];
@@ -42,16 +95,7 @@ function toReactFlowGraphFromLevels(
             </div>
           ),
         },
-        style: {
-          border: isSelected ? "3px solid #22c55e" : "2px solid #2563eb",
-          borderRadius: "10px",
-          background: "#ffffff",
-          padding: "10px",
-          width: 240,
-          boxShadow: isSelected
-            ? "0 0 0 4px rgba(34,197,94,0.2)"
-            : "0 4px 10px rgba(0,0,0,0.08)",
-        },
+        style: getStateStyle(task.state, isSelected),
       });
     });
   });
@@ -95,17 +139,16 @@ export function ExecGraph({
       }
     });
   }, [apiData.tasks, apiData.dependencies]);
-  useEffect(() => {
-    const { nodes, edges } = toReactFlowGraphFromLevels(
-      levels,
-      apiData.dependencies,
-      selectedId,
-    );
+ useEffect(() => {
+  const { nodes, edges } = toReactFlowGraphFromLevels(
+    levels,
+    apiData.dependencies,
+    selectedId,
+  );
 
-    setNodes(nodes);
-    setEdges(edges);
-  }, [apiData.tasks, apiData.dependencies, selectedId]);
-
+  setNodes(nodes); 
+  setEdges(edges);
+}, [levels, apiData.tasks, selectedId]);
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <ReactFlow

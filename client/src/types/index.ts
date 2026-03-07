@@ -8,7 +8,7 @@ export interface Task  {
   state: StepState;
   ready?: ReadyWhen;
 };
-type StepState =
+export type StepState =
   | "idle"
   | "starting"
   | "ready"// service is ready
@@ -17,6 +17,8 @@ type StepState =
   | "failed"
   | "stopped"; //manually stop
 
+
+  
 type ReadyWhen =
   | { kind: "exit" }
   | { kind: "port"; port: number }

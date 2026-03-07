@@ -8,7 +8,7 @@ export default function ExecutionDashboard() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       
-      {/* BOTH VIEWS STAY MOUNTED */}
+  
       <div className={view === "terminal" ? "block h-full" : "hidden"}>
         <TerminalPage />
       </div>
