@@ -94,12 +94,21 @@ export type TaskFinishedEvent = {
   status: "success" | "failed";
 };
 
+export type TaskStateEvent = {
+  type: "task_state";
+terminalId: string;
+  taskId: string;
+  state: StepState;
+};
+
 export type Events =
   | TerminalOpenEvent
   | TaskStartedEvent
   | TaskStdoutEvent
   | TaskStderrEvent
-  | TaskFinishedEvent;
+  | TaskFinishedEvent|
+  TaskStateEvent
+  ;
 
 export type TerminalUIState = {
   terminalId: string;

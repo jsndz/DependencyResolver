@@ -2,12 +2,30 @@ import { ChildProcess, spawn } from "child_process";
 import type { Response } from "express";
 import net from "net";
 import crypto from "crypto";
-import { runningProcesses, taskLogs, tasks, terminal, type Task } from "../store";
+
+import {
+  runningProcesses,
+  taskLogs,
+  tasks,
+  terminal,
+  type Task,
+} from "../store";
+
+function sendState(res: Response, task: Task) {
+  res.write(
+    `data: ${JSON.stringify({
+      type: "task_state",
+      terminalId: terminal.get(task.id)?.terminalId,
+      taskId: task.id,
+      state: task.state,
+    })}\n\n`
+  );
+}
+
 
 function selectTerminalId(task: Task): string {
   function createTerminalId() {
-    const id = `term-${crypto.randomUUID()}`;
-    return id;
+    return `term-${crypto.randomUUID()}`;
   }
 
   if (task.dependency.length === 0) {
@@ -22,24 +40,26 @@ function selectTerminalId(task: Task): string {
 
     if (!parentTask || !parentTerminal) continue;
 
-    if (parentTask.type === "service") {
-      continue;
-    }
+    if (parentTask.type === "service") continue;
 
     if (!parentTerminal.taken) {
       parentTerminal.taken = true;
+
       terminal.set(task.id, {
         terminalId: parentTerminal.terminalId,
         taken: true,
       });
+
       return parentTerminal.terminalId;
     }
   }
 
   const id = createTerminalId();
   terminal.set(task.id, { terminalId: id, taken: false });
+
   return id;
 }
+
 
 export async function runCommand(task: Task, res: Response): Promise<void> {
   return new Promise(async (resolve, reject) => {
@@ -52,16 +72,18 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
     }
 
     const terminalId = selectTerminalId(task);
-    console.log(task.id);
+
     taskLogs.set(task.id, []);
+
     res.write(
       `data: ${JSON.stringify({
         type: "terminal_open",
         terminalId,
         name: task.task,
         taskId: task.id,
-      })}\n\n`,
+      })}\n\n`
     );
+
     res.write(
       `data: ${JSON.stringify({
         type: "task_started",
@@ -70,7 +92,7 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
         data: `execution@${task.task}:~${folder}$ ${command}\r\n`,
         command,
         folder,
-      })}\n\n`,
+      })}\n\n`
     );
 
     const parts = command.trim().split(/\s+/);
@@ -83,47 +105,66 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
       stdio: "pipe",
     });
 
+  
+
     task.state = "running";
+    sendState(res, task);
+
     runningProcesses.set(task.id, child);
+
+
 
     child.stdout.on("data", (d) => {
       const output = d.toString();
+
       if (!taskLogs.has(task.id)) {
         taskLogs.set(task.id, []);
       }
+
       taskLogs.get(task.id)!.push(output);
+
       res.write(
         `data: ${JSON.stringify({
           type: "task_stdout",
           terminalId,
           taskId: task.id,
           data: output,
-        })}\n\n`,
+        })}\n\n`
       );
     });
 
+  
+
     child.stderr.on("data", (d) => {
       const output = d.toString();
+
       if (!taskLogs.has(task.id)) {
         taskLogs.set(task.id, []);
       }
+
       taskLogs.get(task.id)!.push(output);
+
       res.write(
         `data: ${JSON.stringify({
           type: "task_stderr",
           terminalId,
           taskId: task.id,
           data: output,
-        })}\n\n`,
+        })}\n\n`
       );
     });
+
+  
+
     child.on("close", (code: number | null) => {
       const entry = terminal.get(task.id);
       if (entry) entry.taken = false;
 
       const ok = code === 0 || code === null;
+
       if (task.type === "job") {
         task.state = ok ? "completed" : "failed";
+        sendState(res, task);
       }
 
       runningProcesses.delete(task.id);
@@ -135,62 +176,57 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
           taskId: task.id,
           status: ok ? "success" : "failed",
           exitCode: code,
-        })}\n\n`,
+        })}\n\n`
       );
 
-      if (ok) {
-        resolve();
-      } else {
-        reject();
-      }
+      if (ok) resolve();
+      else reject();
     });
 
-    child.on("error", (err) => {
+    child.on("error", () => {
       reject(new Error(`Failed to start process for task ${task.task}`));
     });
 
+
     if (task.type === "service") {
-      readinessCheck(task, child)
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-
-        });
-
+      readinessCheck(task, child, res)
+        .then(() => resolve())
+        .catch(() => {});
       return;
     }
   });
 }
 
-async function readinessCheck(task: Task, child: ChildProcess): Promise<void> {
-  if (task.state === "ready") {
-    return;
-  }
 
-  if (!task.ready) {
-    return;
-  }
+async function readinessCheck(
+  task: Task,
+  child: ChildProcess,
+  res: Response
+): Promise<void> {
+  if (task.state === "ready") return;
+  if (!task.ready) return;
 
   if (task.ready.kind === "port") {
-    await waitForPort(task.ready.port, child, task.task);
+    await waitForPort(task.ready.port, child);
     task.state = "ready";
+    sendState(res, task);
     return;
   }
 
   if (task.ready.kind === "log") {
-    await waitForLog(child, task.ready.match, task.task);
+    await waitForLog(child, task.ready.match);
     task.state = "ready";
+    sendState(res, task);
     return;
   }
 }
 
+
 function waitForPort(
   port: number,
   child: ChildProcess,
-  taskName: string,
   ip = "127.0.0.1",
-  timeout = 30_000,
+  timeout = 30000
 ): Promise<void> {
   const startTime = Date.now();
 
@@ -225,7 +261,9 @@ function waitForPort(
     };
 
     child.once("exit", () => {
-      finish(() => rej(new Error("process exited before port was ready")));
+      finish(() =>
+        rej(new Error("process exited before port was ready"))
+      );
     });
 
     const retry = () => {
@@ -240,24 +278,27 @@ function waitForPort(
   });
 }
 
+
 function waitForLog(
   child: ChildProcess,
   match: string | RegExp,
-  taskName: string,
-  timeout = 30_000,
+  timeout = 30000
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     let buffer = "";
-    const MAX_BUFFER = 10_000;
+    const MAX_BUFFER = 10000;
 
     const onData = (d: Buffer) => {
       buffer += d.toString("utf8");
+
       if (buffer.length > MAX_BUFFER) {
         buffer = buffer.slice(-MAX_BUFFER);
       }
 
       if (
-        typeof match === "string" ? buffer.includes(match) : match.test(buffer)
+        typeof match === "string"
+          ? buffer.includes(match)
+          : match.test(buffer)
       ) {
         cleanup();
         resolve();

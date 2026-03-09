@@ -2,13 +2,15 @@ import { useEffect, useReducer, useRef } from "react";
 import { terminalsReducer } from "../config/handleSSE";
 import { Events, TerminalUIState } from "../types";
 import { Terminal as XTerm } from "@xterm/xterm";
+import { useTasks } from "./useTasks";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useTerminals() {
   const [state, dispatch] = useReducer(
     terminalsReducer,
     {} as Record<string, TerminalUIState>,
   );
-
+  const queryClient = useQueryClient();
   const esRef = useRef<EventSource | null>(null);
   const terminalMap = useRef<Record<string, XTerm>>({});
 
@@ -17,9 +19,7 @@ export function useTerminals() {
       return;
     }
 
-    const eventSource = new EventSource(
-      "http://localhost:5601/api/execute",
-    );
+    const eventSource = new EventSource("http://localhost:5601/api/execute");
 
     esRef.current = eventSource;
 
@@ -49,7 +49,18 @@ export function useTerminals() {
           case "task_started":
             term.write(`\r\n$ ${msg.command}\r\n`);
             break;
+          case "task_state":
+            queryClient.setQueryData(["tasks"], (old: any) => {
+              if (!old) return old;
 
+              return {
+                ...old,
+                tasks: old.tasks.map((t: any) =>
+                  t.id === msg.taskId ? { ...t, state: msg.state } : t,
+                ),
+              };
+            });
+            break;
           default:
             break;
         }
