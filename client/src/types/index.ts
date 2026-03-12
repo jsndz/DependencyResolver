@@ -17,7 +17,7 @@ export type StepState =
   | "failed"
   | "stopped"; //manually stop
 
-
+export type StateCounts = Record<StepState, number>;
   
 type ReadyWhen =
   | { kind: "exit" }

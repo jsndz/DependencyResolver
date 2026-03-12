@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ExecGraph } from "./ExecGraph";
 import LogViewer from "./LogView";
+import ExecutionNavbar from "./ExecutionNavbar";
 
 export default function LogPage() {
   const { data } = useTasks();
@@ -46,29 +47,8 @@ export default function LogPage() {
     setSelectedTaskId(id);
   };
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* HEADER */}
-      <div className="h-16 border-b flex items-center justify-between px-6 shrink-0">
-        <img src="/logo.png" alt="logo" width={150} />
-
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate("/")}>
-            Back
-          </Button>
-
-          <Button
-            onClick={handleStop}
-            disabled={status === "loading" || status === "stopped"}
-            variant={status === "stopped" ? "secondary" : "destructive"}
-          >
-            {status === "loading"
-              ? "Stopping..."
-              : status === "stopped"
-                ? "Stopped"
-                : "Stop"}
-          </Button>
-        </div>
-      </div>
 
       {/* MAIN */}
       <div className="flex flex-1 relative overflow-hidden">
@@ -172,35 +152,7 @@ export default function LogPage() {
         </div>
       </div>
 
-      {/* FOOTER */}
-      <footer className="h-8 border-t px-4 flex items-center justify-between text-xs text-muted-foreground shrink-0">
-        {systemStats ? (
-          <>
-            <div className="flex gap-4">
-              <span>CPU: {systemStats.cpuCores} cores</span>
-              <span>
-                Load:{" "}
-                {systemStats.loadAvg
-                  .map((l: number) => l.toFixed(2))
-                  .join(", ")}
-              </span>
-            </div>
-
-            <div className="flex gap-4">
-              <span>
-                Memory:{" "}
-                {((systemStats.usedMem / systemStats.totalMem) * 100).toFixed(
-                  1,
-                )}
-                % used
-              </span>
-              <span>Platform: {systemStats.platform}</span>
-            </div>
-          </>
-        ) : (
-          <span>Loading system stats...</span>
-        )}
-      </footer>
+   
     </div>
   );
 }
