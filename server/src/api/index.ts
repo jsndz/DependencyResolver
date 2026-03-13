@@ -119,20 +119,29 @@ router.get("/path", (req, res) => {
 });
 
 router.get("/cycle", (req, res) => {
-  res.json(detectCycle(dependencies, tasks));
+  const indices = detectCycle(dependencies, tasks)
+  console.log("cycle", indices);
+  const result = indices.map((i)=>tasks[i]!.task)
+  res.json(result);
 });
 
 router.get("/parallel", (req, res) => {
-  res.json(parallelExecution(dependencies, tasks));
+  const result = parallelExecution(dependencies, tasks);
+  console.log("parallel", result);
+  res.json(result);
 });
 
 router.get("/terminal", (req, res) => {
   const indices = terminalNodes(dependencies, tasks);
+  console.log("terminal",indices.map((i) => tasks[i]!.task));
+  
   res.json(indices.map((i) => tasks[i]!.task));
 });
 
 router.get("/unreachable", (req, res) => {
   const indices = unreachableNodes(dependencies, tasks);
+  console.log("unreachable", indices.map((i) => tasks[i]!.task));
+
   res.json(indices.map((i) => tasks[i]!.task));
 });
 

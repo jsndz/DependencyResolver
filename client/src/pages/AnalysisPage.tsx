@@ -6,8 +6,8 @@ export default function AnalysisPage() {
   const tasks = data?.tasks ?? [];
 
   return (
-    <div className="max-w-3xl space-y-6">
+
       <AnalysisPanel tasks={tasks} />
-    </div>
+
   );
 }
