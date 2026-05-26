@@ -198,132 +198,132 @@ export async function runCommand(task: Task, res: Response): Promise<void> {
 }
 
 
-async function readinessCheck(
-  task: Task,
-  child: ChildProcess,
-  res: Response
-): Promise<void> {
-  if (task.state === "ready") return;
-  if (!task.ready) return;
+  async function readinessCheck(
+    task: Task,
+    child: ChildProcess,
+    res: Response
+  ): Promise<void> {
+    if (task.state === "ready") return;
+    if (!task.ready) return;
 
-  if (task.ready.kind === "port") {
-    await waitForPort(task.ready.port, child);
-    task.state = "ready";
-    sendState(res, task);
-    return;
+    if (task.ready.kind === "port") {
+      await waitForPort(task.ready.port, child);
+      task.state = "ready";
+      sendState(res, task);
+      return;
+    }
+
+    if (task.ready.kind === "log") {
+      await waitForLog(child, task.ready.match);
+      task.state = "ready";
+      sendState(res, task);
+      return;
+    }
   }
 
-  if (task.ready.kind === "log") {
-    await waitForLog(child, task.ready.match);
-    task.state = "ready";
-    sendState(res, task);
-    return;
-  }
-}
 
+  function waitForPort(
+    port: number,
+    child: ChildProcess,
+    ip = "127.0.0.1",
+    timeout = 30000
+  ): Promise<void> {
+    const startTime = Date.now();
 
-function waitForPort(
-  port: number,
-  child: ChildProcess,
-  ip = "127.0.0.1",
-  timeout = 30000
-): Promise<void> {
-  const startTime = Date.now();
+    return new Promise<void>((res, rej) => {
+      let done = false;
 
-  return new Promise<void>((res, rej) => {
-    let done = false;
+      const finish = (fn: () => void) => {
+        if (done) return;
+        done = true;
+        fn();
+      };
 
-    const finish = (fn: () => void) => {
-      if (done) return;
-      done = true;
-      fn();
-    };
+      const connect = () => {
+        const socket = new net.Socket();
 
-    const connect = () => {
-      const socket = new net.Socket();
+        socket.on("connect", () => {
+          socket.destroy();
+          finish(res);
+        });
 
-      socket.on("connect", () => {
-        socket.destroy();
-        finish(res);
+        socket.on("error", () => {
+          socket.destroy();
+          retry();
+        });
+
+        socket.on("timeout", () => {
+          socket.destroy();
+          retry();
+        });
+
+        socket.connect(port, ip);
+      };
+
+      child.once("exit", () => {
+        finish(() =>
+          rej(new Error("process exited before port was ready"))
+        );
       });
 
-      socket.on("error", () => {
-        socket.destroy();
-        retry();
-      });
+      const retry = () => {
+        if (Date.now() - startTime > timeout) {
+          finish(() => rej(new Error("timeout")));
+        } else {
+          setTimeout(connect, 200);
+        }
+      };
 
-      socket.on("timeout", () => {
-        socket.destroy();
-        retry();
-      });
-
-      socket.connect(port, ip);
-    };
-
-    child.once("exit", () => {
-      finish(() =>
-        rej(new Error("process exited before port was ready"))
-      );
+      connect();
     });
-
-    const retry = () => {
-      if (Date.now() - startTime > timeout) {
-        finish(() => rej(new Error("timeout")));
-      } else {
-        setTimeout(connect, 200);
-      }
-    };
-
-    connect();
-  });
-}
+  }
 
 
-function waitForLog(
-  child: ChildProcess,
-  match: string | RegExp,
-  timeout = 30000
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let buffer = "";
-    const MAX_BUFFER = 10000;
+  function waitForLog(
+    child: ChildProcess,
+    match: string | RegExp,
+    timeout = 30000
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let buffer = "";
+      const MAX_BUFFER = 10000;
 
-    const onData = (d: Buffer) => {
-      buffer += d.toString("utf8");
+      const onData = (d: Buffer) => {
+        buffer += d.toString("utf8");
 
-      if (buffer.length > MAX_BUFFER) {
-        buffer = buffer.slice(-MAX_BUFFER);
-      }
+        if (buffer.length > MAX_BUFFER) {
+          buffer = buffer.slice(-MAX_BUFFER);
+        }
 
-      if (
-        typeof match === "string"
-          ? buffer.includes(match)
-          : match.test(buffer)
-      ) {
+        if (
+          typeof match === "string"
+            ? buffer.includes(match)
+            : match.test(buffer)
+        ) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const onExit = () => {
         cleanup();
-        resolve();
-      }
-    };
+        reject(new Error("process exited before log matched"));
+      };
 
-    const onExit = () => {
-      cleanup();
-      reject(new Error("process exited before log matched"));
-    };
+      const cleanup = () => {
+        child.stdout?.off("data", onData);
+        child.stderr?.off("data", onData);
+        child.off("exit", onExit);
+        clearTimeout(timer);
+      };
 
-    const cleanup = () => {
-      child.stdout?.off("data", onData);
-      child.stderr?.off("data", onData);
-      child.off("exit", onExit);
-      clearTimeout(timer);
-    };
+      child.stdout?.on("data", onData);
+      child.stderr?.on("data", onData);
+      child.once("exit", onExit);
 
-    child.stdout?.on("data", onData);
-    child.stderr?.on("data", onData);
-    child.once("exit", onExit);
-
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error("log readiness timeout"));
-    }, timeout);
-  });
-}
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error("log readiness timeout"));
+      }, timeout);
+    });
+  }

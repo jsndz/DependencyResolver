@@ -372,9 +372,7 @@ export default function AnalysisPanel({ tasks }: { tasks: Task[] }) {
   );
 }
 
-/* ----------------------- */
-/* UI Helpers */
-/* ----------------------- */
+
 
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (

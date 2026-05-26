@@ -156,3 +156,10 @@ Redesigned the task page to add list of tasks, edit sidebar, system information 
 
 Date: March 5,2026
 Redesigned the execution page to provide a graph view with logs. Create a in-memory map to store the logs in the backend.
+
+
+Date: April 16,2026
+Lot changed build a new project with electron to build this as a application. Changed sse -> electron ipc
+
+Date: April 28,2026
+Update UI with more tech + Noir look
